@@ -11,7 +11,7 @@ class Categoria(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     nombre = Column(String(50), unique=True, nullable=False)
     descripcion = Column(String(200), nullable=True)
-    activo = Column(Boolean, default=True)
+    
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
     productos = relationship("Producto", back_populates="categoria")

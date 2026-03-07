@@ -14,7 +14,6 @@ class Descuento(Base):
     monto_fijo = Column(Numeric(10, 2), nullable=True)
     fecha_inicio = Column(DateTime, nullable=False)
     fecha_fin = Column(DateTime, nullable=False)
-    activo = Column(Boolean, default=True)
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
     ordenes = relationship("Orden", back_populates="descuento")

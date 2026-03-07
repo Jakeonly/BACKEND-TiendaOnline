@@ -24,3 +24,16 @@ class Usuario(Base):
 
     def __repr__(self):
         return f"<Usuario(id={self.id}, email='{self.email}')>"
+    
+"""
+-id
+-nombre_completo
+-email
+-contraseña
+-telefono
+-direccion
+-activo
+-es_admin
+-fecha_creacion
+-fecha_edicion
+"""
