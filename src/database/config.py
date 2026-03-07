@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import Session
 
 # Cargar variables de entorno
 load_dotenv()
@@ -29,7 +30,7 @@ engine = create_engine(
 )
 
 # Crear la sesión
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker[Session](autocommit=False, autoflush=False, bind=engine)
 
 # Base para los modelos
 Base = declarative_base()
