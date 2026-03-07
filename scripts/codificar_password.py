@@ -21,4 +21,4 @@ if __name__ == "__main__":
         print("Ejemplo: postgresql://usuario:ESTE_VALOR@host/db?sslmode=require")
 
 
-#Por ahora no hizo nada
+#Nuestra contraseña de Neon no tiene caracteres especiales, asi que no es necesario codificarla
