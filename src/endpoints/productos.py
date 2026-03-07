@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from src.database.config import get_db
 from src.entities.producto import Producto
+from src.entities.categoria import Categoria
 from src.schemas.producto_schema import ProductoCreate, ProductoUpdate, ProductoResponse
 
 router = APIRouter(prefix="/productos", tags=["productos"])
@@ -22,6 +23,8 @@ def obtener_producto(producto_id: UUID, db: Session = Depends(get_db)):
 
 @router.post("", response_model=ProductoResponse, status_code=201)
 def crear_producto(dato: ProductoCreate, db: Session = Depends(get_db)):
+    if not db.query(Categoria).filter(Categoria.id == dato.categoria_id).first():
+        raise HTTPException(status_code=400, detail="Categoría no encontrada")
     producto = Producto(**dato.model_dump())
     db.add(producto)
     db.commit()

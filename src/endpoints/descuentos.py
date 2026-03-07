@@ -35,8 +35,7 @@ def actualizar_descuento(descuento_id: UUID, dato: DescuentoUpdate, db: Session 
     descuento = db.query(Descuento).filter(Descuento.id == descuento_id).first()
     if not descuento:
         raise HTTPException(status_code=404, detail="Descuento no encontrado")
-    update = dato.model_dump(exclude_unset=True)
-    for k, v in update.items():
+    for k, v in dato.model_dump(exclude_unset=True).items():
         setattr(descuento, k, v)
     db.commit()
     db.refresh(descuento)

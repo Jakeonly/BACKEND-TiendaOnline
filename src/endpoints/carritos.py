@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from src.database.config import get_db
 from src.entities.carrito import Carrito
+from src.entities.usuario import Usuario
 from src.schemas.carrito_schema import CarritoCreate, CarritoUpdate, CarritoResponse
 
 router = APIRouter(prefix="/carritos", tags=["carritos"])
@@ -22,6 +23,8 @@ def obtener_carrito(carrito_id: UUID, db: Session = Depends(get_db)):
 
 @router.post("", response_model=CarritoResponse, status_code=201)
 def crear_carrito(dato: CarritoCreate, db: Session = Depends(get_db)):
+    if not db.query(Usuario).filter(Usuario.id == dato.usuario_id).first():
+        raise HTTPException(status_code=400, detail="Usuario no encontrado")
     carrito = Carrito(**dato.model_dump())
     db.add(carrito)
     db.commit()
@@ -33,8 +36,7 @@ def actualizar_carrito(carrito_id: UUID, dato: CarritoUpdate, db: Session = Depe
     carrito = db.query(Carrito).filter(Carrito.id == carrito_id).first()
     if not carrito:
         raise HTTPException(status_code=404, detail="Carrito no encontrado")
-    update = dato.model_dump(exclude_unset=True)
-    for k, v in update.items():
+    for k, v in dato.model_dump(exclude_unset=True).items():
         setattr(carrito, k, v)
     db.commit()
     db.refresh(carrito)
