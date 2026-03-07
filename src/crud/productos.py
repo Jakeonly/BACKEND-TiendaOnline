@@ -18,13 +18,11 @@ def crear_producto(
     categoria_id: str,
     descripcion: str | None = None,
     stock: int = 0,
-    activo: bool = True,
 ) -> dict:
     payload = {
         "nombre": nombre,
         "precio": precio,
         "stock": stock,
-        "activo": activo,
         "categoria_id": categoria_id,
     }
     if descripcion is not None:
@@ -37,7 +35,6 @@ def actualizar_producto(
     descripcion: str | None = None,
     precio: float | None = None,
     stock: int | None = None,
-    activo: bool | None = None,
     categoria_id: str | None = None,
 ) -> dict:
     payload = {}
@@ -49,8 +46,6 @@ def actualizar_producto(
         payload["precio"] = precio
     if stock is not None:
         payload["stock"] = stock
-    if activo is not None:
-        payload["activo"] = activo
     if categoria_id is not None:
         payload["categoria_id"] = categoria_id
 
