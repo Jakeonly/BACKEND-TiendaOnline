@@ -15,9 +15,9 @@ router = APIRouter(prefix="/detalle-carrito", tags=["detalle-carrito"])
 def listar_detalles_carrito(db: Session = Depends(get_db)):
     return db.query(DetalleCarrito).all()
 
-@router.get("/{detalle_id}", response_model=DetalleCarritoResponse)
-def obtener_detalle_carrito(detalle_id: UUID, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_id).first()
+@router.get("/{detalle_carrito_id}", response_model=DetalleCarritoResponse)
+def obtener_detalle_carrito(detalle_carrito_id: UUID, db: Session = Depends(get_db)):
+    detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_carrito_id).first()
     if not detalle:
         raise HTTPException(status_code=404, detail="Detalle no encontrado")
     return detalle
@@ -34,9 +34,9 @@ def crear_detalle_carrito(dato: DetalleCarritoCreate, db: Session = Depends(get_
     db.refresh(detalle)
     return detalle
 
-@router.put("/{detalle_id}", response_model=DetalleCarritoResponse)
-def actualizar_detalle_carrito(detalle_id: UUID, dato: DetalleCarritoUpdate, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_id).first()
+@router.put("/{detalle_carrito_id}", response_model=DetalleCarritoResponse)
+def actualizar_detalle_carrito(detalle_carrito_id: UUID, dato: DetalleCarritoUpdate, db: Session = Depends(get_db)):
+    detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_carrito_id).first()
     if not detalle:
         raise HTTPException(status_code=404, detail="Detalle no encontrado")
     for k, v in dato.model_dump(exclude_unset=True).items():
@@ -45,9 +45,9 @@ def actualizar_detalle_carrito(detalle_id: UUID, dato: DetalleCarritoUpdate, db:
     db.refresh(detalle)
     return detalle
 
-@router.delete("/{detalle_id}", status_code=204)
-def eliminar_detalle_carrito(detalle_id: UUID, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_id).first()
+@router.delete("/{detalle_carrito_id}", status_code=204)
+def eliminar_detalle_carrito(detalle_carrito_id: UUID, db: Session = Depends(get_db)):
+    detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_carrito_id).first()
     if not detalle:
         raise HTTPException(status_code=404, detail="Detalle no encontrado")
     db.delete(detalle)
