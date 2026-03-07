@@ -10,7 +10,6 @@ class ProductoBase(BaseModel):
     descripcion: str | None = None
     precio: Decimal
     stock: int = 0
-    activo: bool = True
     categoria_id: UUID
 
 
@@ -23,7 +22,6 @@ class ProductoUpdate(BaseModel):
     descripcion: str | None = None
     precio: Decimal | None = None
     stock: int | None = None
-    activo: bool | None = None
     categoria_id: UUID | None = None
 
 
