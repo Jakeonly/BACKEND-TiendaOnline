@@ -26,11 +26,10 @@ engine = create_engine(
     echo=False,  # Cambiar a True para ver consultas SQL
     pool_pre_ping=True,  # Verificar conexión antes de usar
     pool_recycle=300,  # Reciclar conexiones cada 5 minutos
-    connect_args={"sslmode": "require"},  # Requerir SSL para Neon
 )
 
 # Crear la sesión
-SessionLocal = sessionmaker[Session](autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base para los modelos
 Base = declarative_base()

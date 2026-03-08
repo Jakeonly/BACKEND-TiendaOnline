@@ -7,9 +7,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.database.config import create_tables
-from src.endpoints import carritos, categorias, descuentos, detalle_carrito, detalle_orden, ordenes, productos, usuarios
 
-# Importar modelos para que Base.metadata los conozca
+# Importamos los routers de la carpeta endpoints
+from src.endpoints import (
+    carritos, categorias, descuentos, detalle_carrito, 
+    detalle_orden, ordenes, productos, usuarios
+)
+
+# Importar modelos para que Base.metadata los conozca al crear las tablas
 import src.entities.carrito
 import src.entities.categoria
 import src.entities.descuento
@@ -19,24 +24,31 @@ import src.entities.orden
 import src.entities.producto
 import src.entities.usuario
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_tables()
     yield
-    # shutdown si hiciera falta
-
 
 app = FastAPI(
-    title="API Tienda Online",
-    description="API con FastAPI, SQLAlchemy y PostgreSQL",
+    title="API Tienda Online - Proyecto ITM",
+    description="API con FastAPI, SQLAlchemy y PostgreSQL para gestión de e-commerce",
     lifespan=lifespan,
 )
 
+# REGISTRO DE TODOS LOS ROUTERS (Los 8 deben estar aquí)
 app.include_router(usuarios.router)
 app.include_router(productos.router)
-
+app.include_router(categorias.router)
+app.include_router(carritos.router)
+app.include_router(descuentos.router)
+app.include_router(ordenes.router)
+app.include_router(detalle_carrito.router)
+app.include_router(detalle_orden.router)
 
 @app.get("/")
 def inicio():
-    return {"mensaje": "API Tienda Online", "docs": "/docs"}
+    return {
+        "mensaje": "API Tienda Online lista",
+        "documentacion": "/docs",
+        "redoc": "/redoc"
+    }
