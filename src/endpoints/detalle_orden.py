@@ -15,9 +15,9 @@ router = APIRouter(prefix="/detalle-orden", tags=["detalle-orden"])
 def listar_detalles_orden(db: Session = Depends(get_db)):
     return db.query(DetalleOrden).all()
 
-@router.get("/{detalle_id}", response_model=DetalleOrdenResponse)
-def obtener_detalle_orden(detalle_id: UUID, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleOrden).filter(DetalleOrden.id == detalle_id).first()
+@router.get("/{detalle_orden_id}", response_model=DetalleOrdenResponse)
+def obtener_detalle_orden(detalle_orden_id: UUID, db: Session = Depends(get_db)):
+    detalle = db.query(DetalleOrden).filter(DetalleOrden.id == detalle_orden_id).first()
     if not detalle:
         raise HTTPException(status_code=404, detail="Detalle no encontrado")
     return detalle
@@ -34,9 +34,9 @@ def crear_detalle_orden(dato: DetalleOrdenCreate, db: Session = Depends(get_db))
     db.refresh(detalle)
     return detalle
 
-@router.put("/{detalle_id}", response_model=DetalleOrdenResponse)
-def actualizar_detalle_orden(detalle_id: UUID, dato: DetalleOrdenUpdate, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleOrden).filter(DetalleOrden.id == detalle_id).first()
+@router.put("/{detalle_orden_id}", response_model=DetalleOrdenResponse)
+def actualizar_detalle_orden(detalle_orden_id: UUID, dato: DetalleOrdenUpdate, db: Session = Depends(get_db)):
+    detalle = db.query(DetalleOrden).filter(DetalleOrden.id == detalle_orden_id).first()
     if not detalle:
         raise HTTPException(status_code=404, detail="Detalle no encontrado")
     for k, v in dato.model_dump(exclude_unset=True).items():
@@ -45,9 +45,9 @@ def actualizar_detalle_orden(detalle_id: UUID, dato: DetalleOrdenUpdate, db: Ses
     db.refresh(detalle)
     return detalle
 
-@router.delete("/{detalle_id}", status_code=204)
-def eliminar_detalle_orden(detalle_id: UUID, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleOrden).filter(DetalleOrden.id == detalle_id).first()
+@router.delete("/{detalle_orden_id}", status_code=204)
+def eliminar_detalle_orden(detalle_orden_id: UUID, db: Session = Depends(get_db)):
+    detalle = db.query(DetalleOrden).filter(DetalleOrden.id == detalle_orden_id).first()
     if not detalle:
         raise HTTPException(status_code=404, detail="Detalle no encontrado")
     db.delete(detalle)
