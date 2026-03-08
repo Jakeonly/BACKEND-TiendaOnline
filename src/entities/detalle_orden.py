@@ -11,7 +11,7 @@ class DetalleOrden(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     cantidad = Column(Integer, nullable=False)
     precio_unitario = Column(Numeric(10, 2), nullable=False)
-    subtotal = Column(Numeric(10, 2), insert_default=0) 
+    subtotal = Column(Numeric(10, 2), default=0) 
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
     orden_id = Column(UUID(as_uuid=True), ForeignKey("tbl_ordenes.id"), nullable=False)
