@@ -1,6 +1,7 @@
 """
 CRUD Descuento
 """
+
 from src.crud.client import _delete, _get, _post, _put
 
 
@@ -24,9 +25,10 @@ def crear_descuento(
         "fecha_inicio": fecha_inicio,
         "fecha_fin": fecha_fin,
         "porcentaje": porcentaje,
-        "monto_fijo": monto_fijo
+        "monto_fijo": monto_fijo,
     }
     return _post("/descuentos", json=payload)
+
 
 def actualizar_descuento(
     descuento_id: str,

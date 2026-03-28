@@ -9,9 +9,11 @@ from src.schemas.usuario_schema import UsuarioCreate, UsuarioUpdate, UsuarioResp
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
+
 @router.get("", response_model=list[UsuarioResponse])
 def listar_usuarios(db: Session = Depends(get_db)):
     return db.query(Usuario).all()
+
 
 @router.get("/{usuario_id}", response_model=UsuarioResponse)
 def obtener_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
@@ -19,6 +21,7 @@ def obtener_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return usuario
+
 
 @router.post("", response_model=UsuarioResponse, status_code=201)
 def crear_usuario(dato: UsuarioCreate, db: Session = Depends(get_db)):
@@ -30,8 +33,11 @@ def crear_usuario(dato: UsuarioCreate, db: Session = Depends(get_db)):
     db.refresh(usuario)
     return usuario
 
+
 @router.put("/{usuario_id}", response_model=UsuarioResponse)
-def actualizar_usuario(usuario_id: UUID, dato: UsuarioUpdate, db: Session = Depends(get_db)):
+def actualizar_usuario(
+    usuario_id: UUID, dato: UsuarioUpdate, db: Session = Depends(get_db)
+):
     usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -41,6 +47,7 @@ def actualizar_usuario(usuario_id: UUID, dato: UsuarioUpdate, db: Session = Depe
     db.commit()
     db.refresh(usuario)
     return usuario
+
 
 @router.delete("/{usuario_id}", status_code=204)
 def eliminar_usuario(usuario_id: UUID, db: Session = Depends(get_db)):

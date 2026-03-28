@@ -1,6 +1,7 @@
 """
 CRUD Productos
 """
+
 from src.crud.client import _delete, _get, _post, _put
 
 
@@ -28,6 +29,7 @@ def crear_producto(
     if descripcion is not None:
         payload["descripcion"] = descripcion
     return _post("/productos", json=payload)
+
 
 def actualizar_producto(
     producto_id: str,

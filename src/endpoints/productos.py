@@ -10,9 +10,11 @@ from src.schemas.producto_schema import ProductoCreate, ProductoUpdate, Producto
 
 router = APIRouter(prefix="/productos", tags=["productos"])
 
+
 @router.get("", response_model=list[ProductoResponse])
 def listar_productos(db: Session = Depends(get_db)):
     return db.query(Producto).all()
+
 
 @router.get("/{producto_id}", response_model=ProductoResponse)
 def obtener_producto(producto_id: UUID, db: Session = Depends(get_db)):
@@ -20,6 +22,7 @@ def obtener_producto(producto_id: UUID, db: Session = Depends(get_db)):
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return producto
+
 
 @router.post("", response_model=ProductoResponse, status_code=201)
 def crear_producto(dato: ProductoCreate, db: Session = Depends(get_db)):
@@ -31,8 +34,11 @@ def crear_producto(dato: ProductoCreate, db: Session = Depends(get_db)):
     db.refresh(producto)
     return producto
 
+
 @router.put("/{producto_id}", response_model=ProductoResponse)
-def actualizar_producto(producto_id: UUID, dato: ProductoUpdate, db: Session = Depends(get_db)):
+def actualizar_producto(
+    producto_id: UUID, dato: ProductoUpdate, db: Session = Depends(get_db)
+):
     producto = db.query(Producto).filter(Producto.id == producto_id).first()
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
@@ -42,6 +48,7 @@ def actualizar_producto(producto_id: UUID, dato: ProductoUpdate, db: Session = D
     db.commit()
     db.refresh(producto)
     return producto
+
 
 @router.delete("/{producto_id}", status_code=204)
 def eliminar_producto(producto_id: UUID, db: Session = Depends(get_db)):

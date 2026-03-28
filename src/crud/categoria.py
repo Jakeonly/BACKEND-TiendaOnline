@@ -1,6 +1,7 @@
 """
 CRUD Categoria
 """
+
 from src.crud.client import _delete, _get, _post, _put
 
 
@@ -16,11 +17,9 @@ def crear_categoria(
     nombre: str,
     descripcion: str | None = None,
 ) -> dict:
-    payload = {
-        "nombre": nombre,
-        "descripcion": descripcion
-    }
+    payload = {"nombre": nombre, "descripcion": descripcion}
     return _post("/categorias", json=payload)
+
 
 def actualizar_categoria(
     categoria_id: str,
