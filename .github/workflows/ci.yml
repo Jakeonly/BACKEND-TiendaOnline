@@ -1,0 +1,77 @@
+# Pipeline CI: validación, lint, migración y seed (Solo en DEV, como lo pide el PARCIAL 2)
+name: CI
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+# Cancelar ejecuciones obsoletas cuando hay un nuevo push en la misma rama
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: tienda_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/tienda_test
+      SSL_MODE: disable
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache de dependencias
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff pip-audit
+
+      - name: Lint con Ruff
+        run: ruff check src --output-format=github
+
+      - name: Formato con Ruff
+        run: ruff format src --check
+
+      - name: Verificar vulnerabilidades (pip-audit)
+        run: pip-audit --ignore-vuln CVE-2026-4539
+
+      - name: Crear/actualizar BD (migración)
+        run: python migrate_db.py
+
+      - name: Seed (datos iniciales)
+        run: python seed_db.py
+
+      - name: Pruebas (smoke test)
+        run: python -c "from src.app import app; from fastapi.testclient import TestClient; c = TestClient(app); r = c.get('/'); assert r.status_code == 200; b = r.json(); assert b.get('success') is True; assert 'data' in b; print('Smoke test OK')"

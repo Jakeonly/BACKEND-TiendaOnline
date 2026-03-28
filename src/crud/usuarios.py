@@ -1,6 +1,7 @@
 """
 CRUD Usuarios
 """
+
 from src.crud.client import _delete, _get, _post, _put
 
 
@@ -32,6 +33,7 @@ def crear_usuario(
     }
     return _post("/usuarios", json=payload)
 
+
 def actualizar_usuario(
     usuario_id: str,
     nombre_completo: str | None = None,
@@ -59,6 +61,7 @@ def actualizar_usuario(
         payload["activo"] = activo
 
     return _put(f"/usuarios/{usuario_id}", json=payload)
+
 
 def eliminar_usuario(usuario_id: str) -> None:
     _delete(f"/usuarios/{usuario_id}")

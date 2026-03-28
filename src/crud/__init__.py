@@ -1,6 +1,7 @@
 """
 Cliente CRUD que llama a los endpoints de la API.
 """
+
 from src.crud.usuarios import (
     listar_usuarios,
     obtener_usuario,

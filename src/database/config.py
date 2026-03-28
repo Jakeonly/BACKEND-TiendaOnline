@@ -3,42 +3,38 @@ Configuración de la base de datos PostgreSQL con Neon
 """
 
 import os
-
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session
 
 # Cargar variables de entorno
 load_dotenv()
 
-# Configuración de la base de datos Neon PostgreSQL
-# Obtener la URL completa de conexión desde las variables de entorno
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if not DATABASE_URL:
-    raise ValueError("Se requiere DATABASE_URL en las variables de entorno")
 
-# Crear el motor de SQLAlchemy
-engine = create_engine(
-    DATABASE_URL,
-    echo=False,  # Cambiar a True para ver consultas SQL
-    pool_pre_ping=True,  # Verificar conexión antes de usar
-    pool_recycle=300,  # Reciclar conexiones cada 5 minutos
+_ssl_mode = os.getenv("SSL_MODE", "require")
+
+engine = (
+    create_engine(
+        DATABASE_URL,
+        echo=False,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        connect_args={"sslmode": _ssl_mode},
+    )
+    if DATABASE_URL
+    else None
 )
 
-# Crear la sesión
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base para los modelos
 Base = declarative_base()
 
 
 def get_db():
-    """
-    Generador de sesiones de base de datos
-    """
+    if engine is None:
+        raise RuntimeError("DATABASE_URL no configurada.")
     db = SessionLocal()
     try:
         yield db
@@ -47,7 +43,5 @@ def get_db():
 
 
 def create_tables():
-    """
-    Crear todas las tablas definidas en los modelos
-    """
-    Base.metadata.create_all(bind=engine)
+    if engine is not None:
+        Base.metadata.create_all(bind=engine)

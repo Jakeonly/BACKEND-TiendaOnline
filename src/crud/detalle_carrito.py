@@ -1,6 +1,7 @@
 """
 CRUD DetalleCarrito
 """
+
 from src.crud.client import _delete, _get, _post, _put
 
 
