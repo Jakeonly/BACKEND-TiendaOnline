@@ -51,7 +51,10 @@ app.include_router(detalle_orden.router)
 @app.get("/")
 def inicio():
     return {
-        "mensaje": "API Tienda Online lista",
-        "documentacion": "/docs",
-        "redoc": "/redoc",
+        "success": True,
+        "data": {
+            "mensaje": "API Tienda Online lista",
+            "documentacion": "/docs",
+            "redoc": "/redoc",
+        }
     }
