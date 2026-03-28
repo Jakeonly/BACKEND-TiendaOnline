@@ -56,5 +56,5 @@ def inicio():
             "mensaje": "API Tienda Online lista",
             "documentacion": "/docs",
             "redoc": "/redoc",
-        }
+        },
     }
