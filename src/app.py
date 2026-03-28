@@ -15,14 +15,7 @@ from src.endpoints import (
 )
 
 # Importar modelos para que Base.metadata los conozca al crear las tablas
-import src.entities.carrito
-import src.entities.categoria
-import src.entities.descuento
-import src.entities.detalle_carrito
-import src.entities.detalle_orden
-import src.entities.orden
-import src.entities.producto
-import src.entities.usuario
+import src.entities  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
