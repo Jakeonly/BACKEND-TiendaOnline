@@ -22,7 +22,7 @@ engine = (
         echo=False,
         pool_pre_ping=True,
         pool_recycle=300,
-        connect_args={"sslmode": _ssl_mode}, 
+        connect_args={"sslmode": _ssl_mode},
     )
     if DATABASE_URL
     else None
@@ -30,6 +30,7 @@ engine = (
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
 
 def get_db():
     if engine is None:
@@ -39,6 +40,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 def create_tables():
     if engine is not None:

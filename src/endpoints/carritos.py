@@ -21,7 +21,9 @@ router = APIRouter()
 def listar_carritos(db: Session = Depends(get_db)):
     """Muestra todos los carritos registrados."""
     db_carritos = get_carritos(db)
-    data = [CarritoResponse.model_validate(c).model_dump(mode="json") for c in db_carritos]
+    data = [
+        CarritoResponse.model_validate(c).model_dump(mode="json") for c in db_carritos
+    ]
     return success_response(data=data)
 
 

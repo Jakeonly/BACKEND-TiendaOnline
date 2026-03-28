@@ -21,7 +21,9 @@ router = APIRouter()
 def listar_productos(db: Session = Depends(get_db)):
     """Obtiene todos los productos disponibles."""
     db_productos = get_productos(db)
-    data = [ProductoResponse.model_validate(p).model_dump(mode="json") for p in db_productos]
+    data = [
+        ProductoResponse.model_validate(p).model_dump(mode="json") for p in db_productos
+    ]
     return success_response(data=data, message="Catálogo obtenido")
 
 

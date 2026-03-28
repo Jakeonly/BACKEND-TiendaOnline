@@ -3,11 +3,12 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 from uuid import UUID
 
+
 class ProductoBase(BaseModel):
     nombre: str = Field(..., min_length=1, max_length=100)
     descripcion: str | None = Field(None, max_length=500)
-    precio: Decimal = Field(..., gt=0) # Debe ser mayor a 0
-    stock: int = Field(default=0, ge=0) # No puede ser negativo
+    precio: Decimal = Field(..., gt=0)  # Debe ser mayor a 0
+    stock: int = Field(default=0, ge=0)  # No puede ser negativo
     categoria_id: UUID
 
 

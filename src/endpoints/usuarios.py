@@ -23,7 +23,9 @@ router = APIRouter()
 def listar_usuarios(db: Session = Depends(get_db)):
     """Obtiene la lista de todos los usuarios registrados."""
     db_usuarios = get_usuarios(db)
-    data = [UsuarioResponse.model_validate(u).model_dump(mode="json") for u in db_usuarios]
+    data = [
+        UsuarioResponse.model_validate(u).model_dump(mode="json") for u in db_usuarios
+    ]
     return success_response(data=data, message="Lista de usuarios obtenida")
 
 
@@ -42,9 +44,9 @@ def crear_nuevo_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     """Registra un nuevo usuario verificando que el email sea único."""
     if get_usuario_by_email(db, email=usuario.email):
         raise ConflictError(message="El correo electrónico ya está registrado")
-    
+
     usuario.contraseña = hash_password(usuario.contraseña)
-    
+
     nuevo = create_usuario(db=db, usuario=usuario)
     data = UsuarioResponse.model_validate(nuevo).model_dump(mode="json")
     return success_response(data=data, message="Usuario registrado correctamente")
@@ -58,7 +60,7 @@ def actualizar_usuario_data(
 
     if usuario.contraseña:
         usuario.contraseña = hash_password(usuario.contraseña)
-        
+
     db_usuario = update_usuario(db, usuario_id, usuario)
     if not db_usuario:
         raise NotFoundError(message="No se pudo actualizar: Usuario no encontrado")

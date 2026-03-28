@@ -21,7 +21,10 @@ router = APIRouter()
 def listar_todos_los_detalles_de_ordenes(db: Session = Depends(get_db)):
     """Obtiene el desglose de todas las órdenes."""
     db_detalles = get_detalles_orden(db)
-    data = [DetalleOrdenResponse.model_validate(d).model_dump(mode="json") for d in db_detalles]
+    data = [
+        DetalleOrdenResponse.model_validate(d).model_dump(mode="json")
+        for d in db_detalles
+    ]
     return success_response(data=data, message="Detalles de órdenes obtenidos")
 
 

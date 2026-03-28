@@ -3,7 +3,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.database.config import get_db
-from src.schemas.detalle_carrito_schema import DetalleCarritoCreate, DetalleCarritoResponse
+from src.schemas.detalle_carrito_schema import (
+    DetalleCarritoCreate,
+    DetalleCarritoResponse,
+)
 from src.crud.detalle_carrito import (
     get_detalles_carrito,
     get_detalle_carrito_by_id,
@@ -21,7 +24,10 @@ router = APIRouter()
 def listar_todos_los_detalles_de_carritos(db: Session = Depends(get_db)):
     """Obtiene todos los ítems dentro de los carritos."""
     db_detalles = get_detalles_carrito(db)
-    data = [DetalleCarritoResponse.model_validate(d).model_dump(mode="json") for d in db_detalles]
+    data = [
+        DetalleCarritoResponse.model_validate(d).model_dump(mode="json")
+        for d in db_detalles
+    ]
     return success_response(data=data, message="Detalles de carritos obtenidos")
 
 

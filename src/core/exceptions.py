@@ -26,7 +26,9 @@ class AppException(Exception):
 class NotFoundError(AppException):
     """Se lanza cuando un producto, usuario o categoría no existe."""
 
-    def __init__(self, message: str = "Recurso no encontrado", details: dict | list | None = None):
+    def __init__(
+        self, message: str = "Recurso no encontrado", details: dict | list | None = None
+    ):
         super().__init__(
             message=message,
             status_code=status.HTTP_404_NOT_FOUND,

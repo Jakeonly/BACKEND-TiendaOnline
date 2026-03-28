@@ -30,7 +30,7 @@ from src.endpoints import (
     detalle_orden,
 )
 
-# Importar modelos para que Base.metadata los conozca 
+# Importar modelos para que Base.metadata los conozca
 import src.entities.usuario  # noqa: F401
 import src.entities.producto  # noqa: F401
 import src.entities.categoria  # noqa: F401
@@ -43,7 +43,7 @@ import src.entities.detalle_orden  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Función de actualización de la BD 
+    # Función de actualización de la BD
     create_tables()
     yield
 
@@ -54,7 +54,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Manejadores globales de excepciones 
+# Manejadores globales de excepciones
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
@@ -67,9 +67,14 @@ app.include_router(categorias.router, prefix="/categorias", tags=["Categorías"]
 app.include_router(carritos.router, prefix="/carritos", tags=["Carritos"])
 app.include_router(ordenes.router, prefix="/ordenes", tags=["Órdenes"])
 app.include_router(descuentos.router, prefix="/descuentos", tags=["Descuentos"])
-app.include_router(detalle_carrito.router, prefix="/detalle-carrito", tags=["Detalle Carrito"])
-app.include_router(detalle_orden.router, prefix="/detalle-orden", tags=["Detalle Orden"])
+app.include_router(
+    detalle_carrito.router, prefix="/detalle-carrito", tags=["Detalle Carrito"]
+)
+app.include_router(
+    detalle_orden.router, prefix="/detalle-orden", tags=["Detalle Orden"]
+)
 app.include_router(login.router)
+
 
 @app.get("/")
 def inicio():

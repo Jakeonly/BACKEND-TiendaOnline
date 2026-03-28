@@ -19,7 +19,9 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
     )
 
 
-async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+async def http_exception_handler(
+    request: Request, exc: StarletteHTTPException
+) -> JSONResponse:
     """Maneja excepciones estándar de FastAPI/Starlette."""
     detail = exc.detail
     if isinstance(detail, dict):
@@ -38,13 +40,19 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
     )
 
 
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     """Maneja errores de validación de Pydantic (422)."""
     errors = exc.errors()
-    details = [{"loc": e["loc"], "msg": e["msg"], "type": e.get("type")} for e in errors]
+    details = [
+        {"loc": e["loc"], "msg": e["msg"], "type": e.get("type")} for e in errors
+    ]
     return JSONResponse(
         status_code=422,
-        content=error_response("VALIDATION_ERROR", "Datos inválidos en la petición", details),
+        content=error_response(
+            "VALIDATION_ERROR", "Datos inválidos en la petición", details
+        ),
     )
 
 
@@ -52,5 +60,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     """Captura cualquier error inesperado (500)."""
     return JSONResponse(
         status_code=500,
-        content=error_response("INTERNAL_ERROR", "Ocurrió un error inesperado en el servidor."),
+        content=error_response(
+            "INTERNAL_ERROR", "Ocurrió un error inesperado en el servidor."
+        ),
     )

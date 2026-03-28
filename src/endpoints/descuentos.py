@@ -21,7 +21,10 @@ router = APIRouter()
 def listar_todos_los_descuentos(db: Session = Depends(get_db)):
     """Obtiene la lista de todos los cupones y descuentos."""
     db_descuentos = get_descuentos(db)
-    data = [DescuentoResponse.model_validate(d).model_dump(mode="json") for d in db_descuentos]
+    data = [
+        DescuentoResponse.model_validate(d).model_dump(mode="json")
+        for d in db_descuentos
+    ]
     return success_response(data=data, message="Lista de descuentos obtenida")
 
 
@@ -40,7 +43,7 @@ def crear_nuevo_descuento(descuento: DescuentoCreate, db: Session = Depends(get_
     """Registra un nuevo cupón de descuento."""
     if descuento.porcentaje and descuento.porcentaje > 100:
         raise BadRequestError(message="El porcentaje no puede ser mayor a 100")
-        
+
     nuevo_descuento = create_descuento(db=db, descuento=descuento)
     data = DescuentoResponse.model_validate(nuevo_descuento).model_dump(mode="json")
     return success_response(data=data, message="Descuento creado exitosamente")

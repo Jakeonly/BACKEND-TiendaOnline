@@ -21,7 +21,9 @@ router = APIRouter()
 def listar_categorias(db: Session = Depends(get_db)):
     """Lista todas las categorías de la tienda."""
     db_cats = get_categorias(db)
-    data = [CategoriaResponse.model_validate(c).model_dump(mode="json") for c in db_cats]
+    data = [
+        CategoriaResponse.model_validate(c).model_dump(mode="json") for c in db_cats
+    ]
     return success_response(data=data, message="Categorías obtenidas")
 
 
