@@ -17,8 +17,9 @@ from src.core.error_handlers import (
     validation_exception_handler,
 )
 from src.core.responses import success_response
-from src.database.config import Base, create_tables, engine
+from src.database.config import create_tables
 from src.endpoints import (
+    login,
     usuarios,
     productos,
     categorias,
@@ -68,7 +69,7 @@ app.include_router(ordenes.router, prefix="/ordenes", tags=["Órdenes"])
 app.include_router(descuentos.router, prefix="/descuentos", tags=["Descuentos"])
 app.include_router(detalle_carrito.router, prefix="/detalle-carrito", tags=["Detalle Carrito"])
 app.include_router(detalle_orden.router, prefix="/detalle-orden", tags=["Detalle Orden"])
-
+app.include_router(login.router)
 
 @app.get("/")
 def inicio():
