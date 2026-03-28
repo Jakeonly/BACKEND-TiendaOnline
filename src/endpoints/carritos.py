@@ -4,12 +4,13 @@ from sqlalchemy.orm import Session
 
 from src.database.config import get_db
 from src.schemas.carrito_schema import CarritoCreate, CarritoResponse
+
 from src.crud.carrito import (
-    get_carritos,
-    get_carrito_by_id,
-    create_carrito,
-    update_carrito,
-    delete_carrito,
+    listar_carritos,
+    obtener_carrito,
+    crear_carrito,
+    actualizar_carrito,
+    eliminar_carrito,
 )
 from src.core.exceptions import NotFoundError
 from src.core.responses import success_response
@@ -18,9 +19,9 @@ router = APIRouter()
 
 
 @router.get("/")
-def listar_carritos(db: Session = Depends(get_db)):
+def listar_carritos_endpoint(db: Session = Depends(get_db)):
     """Muestra todos los carritos registrados."""
-    db_carritos = get_carritos(db)
+    db_carritos = listar_carritos(db)
     data = [
         CarritoResponse.model_validate(c).model_dump(mode="json") for c in db_carritos
     ]
@@ -28,9 +29,9 @@ def listar_carritos(db: Session = Depends(get_db)):
 
 
 @router.get("/{carrito_id}")
-def obtener_carrito(carrito_id: UUID, db: Session = Depends(get_db)):
+def obtener_carrito_endpoint(carrito_id: UUID, db: Session = Depends(get_db)):
     """Busca un carrito por ID."""
-    db_carrito = get_carrito_by_id(db, carrito_id)
+    db_carrito = obtener_carrito(db, carrito_id)
     if not db_carrito:
         raise NotFoundError(message="Carrito no encontrado")
     data = CarritoResponse.model_validate(db_carrito).model_dump(mode="json")
@@ -38,19 +39,19 @@ def obtener_carrito(carrito_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/", status_code=201)
-def crear_carrito_data(carrito: CarritoCreate, db: Session = Depends(get_db)):
+def crear_carrito_endpoint(carrito: CarritoCreate, db: Session = Depends(get_db)):
     """Crea un carrito para un usuario."""
-    nuevo = create_carrito(db, carrito)
+    nuevo = crear_carrito(db, carrito)
     data = CarritoResponse.model_validate(nuevo).model_dump(mode="json")
     return success_response(data=data, message="Carrito creado")
 
 
 @router.put("/{carrito_id}")
-def actualizar_carrito_data(
+def actualizar_carrito_endpoint(
     carrito_id: UUID, carrito: CarritoCreate, db: Session = Depends(get_db)
 ):
     """Actualiza la información de un carrito."""
-    db_carrito = update_carrito(db, carrito_id, carrito)
+    db_carrito = actualizar_carrito(db, carrito_id, carrito)
     if not db_carrito:
         raise NotFoundError(message="Carrito no encontrado")
     data = CarritoResponse.model_validate(db_carrito).model_dump(mode="json")
@@ -58,8 +59,8 @@ def actualizar_carrito_data(
 
 
 @router.delete("/{carrito_id}", status_code=204)
-def eliminar_carrito_data(carrito_id: UUID, db: Session = Depends(get_db)):
+def eliminar_carrito_endpoint(carrito_id: UUID, db: Session = Depends(get_db)):
     """Elimina un carrito."""
-    if not delete_carrito(db, carrito_id):
+    if not eliminar_carrito(db, carrito_id):
         raise NotFoundError(message="Carrito no encontrado")
     return None

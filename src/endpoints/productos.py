@@ -4,12 +4,13 @@ from sqlalchemy.orm import Session
 
 from src.database.config import get_db
 from src.schemas.producto_schema import ProductoCreate, ProductoResponse
+
 from src.crud.productos import (
-    get_productos,
-    get_producto_by_id,
-    create_producto,
-    update_producto,
-    delete_producto,
+    listar_productos,
+    obtener_producto,
+    crear_producto,
+    actualizar_producto,
+    eliminar_producto,
 )
 from src.core.exceptions import NotFoundError
 from src.core.responses import success_response
@@ -18,9 +19,10 @@ router = APIRouter()
 
 
 @router.get("/")
-def listar_productos(db: Session = Depends(get_db)):
+def listar_productos_endpoint(db: Session = Depends(get_db)):
     """Obtiene todos los productos disponibles."""
-    db_productos = get_productos(db)
+    # Llamamos a listar_productos (el del CRUD)
+    db_productos = listar_productos(db)
     data = [
         ProductoResponse.model_validate(p).model_dump(mode="json") for p in db_productos
     ]
@@ -28,9 +30,9 @@ def listar_productos(db: Session = Depends(get_db)):
 
 
 @router.get("/{producto_id}")
-def obtener_producto(producto_id: UUID, db: Session = Depends(get_db)):
+def obtener_producto_endpoint(producto_id: UUID, db: Session = Depends(get_db)):
     """Busca un producto por su ID."""
-    db_prod = get_producto_by_id(db, producto_id)
+    db_prod = obtener_producto(db, producto_id)
     if not db_prod:
         raise NotFoundError(message="Producto no encontrado")
     data = ProductoResponse.model_validate(db_prod).model_dump(mode="json")
@@ -40,7 +42,7 @@ def obtener_producto(producto_id: UUID, db: Session = Depends(get_db)):
 @router.post("/", status_code=201)
 def crear_nuevo_producto(producto: ProductoCreate, db: Session = Depends(get_db)):
     """Registra un nuevo producto en el inventario."""
-    nuevo = create_producto(db, producto)
+    nuevo = crear_producto(db, producto)
     data = ProductoResponse.model_validate(nuevo).model_dump(mode="json")
     return success_response(data=data, message="Producto creado exitosamente")
 
@@ -50,7 +52,7 @@ def actualizar_producto_data(
     producto_id: UUID, producto: ProductoCreate, db: Session = Depends(get_db)
 ):
     """Actualiza los detalles de un producto."""
-    db_prod = update_producto(db, producto_id, producto)
+    db_prod = actualizar_producto(db, producto_id, producto)
     if not db_prod:
         raise NotFoundError(message="Producto no encontrado")
     data = ProductoResponse.model_validate(db_prod).model_dump(mode="json")
@@ -60,6 +62,6 @@ def actualizar_producto_data(
 @router.delete("/{producto_id}", status_code=204)
 def eliminar_producto_data(producto_id: UUID, db: Session = Depends(get_db)):
     """Elimina un producto del sistema."""
-    if not delete_producto(db, producto_id):
+    if not eliminar_producto(db, producto_id):
         raise NotFoundError(message="Producto no encontrado")
     return None
