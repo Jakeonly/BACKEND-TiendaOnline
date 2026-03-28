@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -10,7 +11,6 @@ from src.crud.productos import (
     update_producto,
     delete_producto,
 )
-# Capa Core
 from src.core.exceptions import NotFoundError
 from src.core.responses import success_response
 
@@ -19,57 +19,45 @@ router = APIRouter()
 
 @router.get("/")
 def listar_productos(db: Session = Depends(get_db)):
-    """Obtiene todos los productos disponibles en la tienda."""
+    """Obtiene todos los productos disponibles."""
     db_productos = get_productos(db)
-    return success_response(
-        data=db_productos, 
-        message="Catálogo de productos obtenido"
-    )
+    data = [ProductoResponse.model_validate(p).model_dump(mode="json") for p in db_productos]
+    return success_response(data=data, message="Catálogo obtenido")
 
 
 @router.get("/{producto_id}")
-def obtener_producto(producto_id: str, db: Session = Depends(get_db)):
-    """Busca un producto por su ID único."""
-    db_producto = get_producto_by_id(db, producto_id)
-    if not db_producto:
-        raise NotFoundError(message=f"El producto con ID {producto_id} no existe")
-    
-    return success_response(data=db_producto)
+def obtener_producto(producto_id: UUID, db: Session = Depends(get_db)):
+    """Busca un producto por su ID."""
+    db_prod = get_producto_by_id(db, producto_id)
+    if not db_prod:
+        raise NotFoundError(message="Producto no encontrado")
+    data = ProductoResponse.model_validate(db_prod).model_dump(mode="json")
+    return success_response(data=data)
 
 
-@router.post("/")
+@router.post("/", status_code=201)
 def crear_nuevo_producto(producto: ProductoCreate, db: Session = Depends(get_db)):
     """Registra un nuevo producto en el inventario."""
-    nuevo_prod = create_producto(db=db, producto=producto)
-    return success_response(
-        data=nuevo_prod, 
-        message="Producto creado exitosamente"
-    )
+    nuevo = create_producto(db, producto)
+    data = ProductoResponse.model_validate(nuevo).model_dump(mode="json")
+    return success_response(data=data, message="Producto creado exitosamente")
 
 
 @router.put("/{producto_id}")
 def actualizar_producto_data(
-    producto_id: str, producto: ProductoCreate, db: Session = Depends(get_db)
+    producto_id: UUID, producto: ProductoCreate, db: Session = Depends(get_db)
 ):
-    """Actualiza los detalles de un producto existente."""
-    db_producto = update_producto(db, producto_id, producto)
-    if not db_producto:
-        raise NotFoundError(message="No se pudo actualizar: Producto no encontrado")
-    
-    return success_response(
-        data=db_producto, 
-        message="Producto actualizado correctamente"
-    )
+    """Actualiza los detalles de un producto."""
+    db_prod = update_producto(db, producto_id, producto)
+    if not db_prod:
+        raise NotFoundError(message="Producto no encontrado")
+    data = ProductoResponse.model_validate(db_prod).model_dump(mode="json")
+    return success_response(data=data, message="Producto actualizado")
 
 
-@router.delete("/{producto_id}")
-def eliminar_producto_data(producto_id: str, db: Session = Depends(get_db)):
+@router.delete("/{producto_id}", status_code=204)
+def eliminar_producto_data(producto_id: UUID, db: Session = Depends(get_db)):
     """Elimina un producto del sistema."""
-    exito = delete_producto(db, producto_id)
-    if not exito:
-        raise NotFoundError(message="No se pudo eliminar: Producto no encontrado")
-    
-    return success_response(
-        data=None, 
-        message="Producto eliminado del inventario"
-    )
+    if not delete_producto(db, producto_id):
+        raise NotFoundError(message="Producto no encontrado")
+    return None

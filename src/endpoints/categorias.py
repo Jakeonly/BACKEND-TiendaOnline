@@ -1,6 +1,6 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from typing import List
 
 from src.database.config import get_db
 from src.schemas.categoria_schema import CategoriaCreate, CategoriaResponse
@@ -11,7 +11,6 @@ from src.crud.categoria import (
     update_categoria,
     delete_categoria,
 )
-# Capa Core
 from src.core.exceptions import NotFoundError
 from src.core.responses import success_response
 
@@ -19,58 +18,46 @@ router = APIRouter()
 
 
 @router.get("/")
-def listar_todas_las_categorias(db: Session = Depends(get_db)):
-    """Obtiene el listado de categorías de productos."""
-    db_categorias = get_categorias(db)
-    return success_response(
-        data=db_categorias, 
-        message="Categorías obtenidas correctamente"
-    )
+def listar_categorias(db: Session = Depends(get_db)):
+    """Lista todas las categorías de la tienda."""
+    db_cats = get_categorias(db)
+    data = [CategoriaResponse.model_validate(c).model_dump(mode="json") for c in db_cats]
+    return success_response(data=data, message="Categorías obtenidas")
 
 
 @router.get("/{categoria_id}")
-def obtener_categoria(categoria_id: str, db: Session = Depends(get_db)):
-    """Busca una categoría específica por su ID."""
-    db_categoria = get_categoria_by_id(db, categoria_id)
-    if not db_categoria:
-        raise NotFoundError(message=f"La categoría con ID {categoria_id} no existe")
-    
-    return success_response(data=db_categoria)
+def obtener_categoria(categoria_id: UUID, db: Session = Depends(get_db)):
+    """Obtiene una categoría por su ID."""
+    db_cat = get_categoria_by_id(db, categoria_id)
+    if not db_cat:
+        raise NotFoundError(message="Categoría no encontrada")
+    data = CategoriaResponse.model_validate(db_cat).model_dump(mode="json")
+    return success_response(data=data)
 
 
-@router.post("/")
-def crear_nueva_categoria(categoria: CategoriaCreate, db: Session = Depends(get_db)):
-    """Crea una nueva categoría para organizar productos."""
-    nueva_cat = create_categoria(db=db, categoria=categoria)
-    return success_response(
-        data=nueva_cat, 
-        message="Categoría creada exitosamente"
-    )
+@router.post("/", status_code=201)
+def crear_categoria_data(categoria: CategoriaCreate, db: Session = Depends(get_db)):
+    """Crea una nueva categoría."""
+    nuevo = create_categoria(db, categoria)
+    data = CategoriaResponse.model_validate(nuevo).model_dump(mode="json")
+    return success_response(data=data, message="Categoría creada")
 
 
 @router.put("/{categoria_id}")
 def actualizar_categoria_data(
-    categoria_id: str, categoria: CategoriaCreate, db: Session = Depends(get_db)
+    categoria_id: UUID, categoria: CategoriaCreate, db: Session = Depends(get_db)
 ):
-    """Actualiza el nombre o descripción de una categoría."""
-    db_categoria = update_categoria(db, categoria_id, categoria)
-    if not db_categoria:
-        raise NotFoundError(message="No se pudo actualizar: Categoría no encontrada")
-    
-    return success_response(
-        data=db_categoria, 
-        message="Categoría actualizada"
-    )
+    """Modifica una categoría existente."""
+    db_cat = update_categoria(db, categoria_id, categoria)
+    if not db_cat:
+        raise NotFoundError(message="Categoría no encontrada")
+    data = CategoriaResponse.model_validate(db_cat).model_dump(mode="json")
+    return success_response(data=data, message="Categoría actualizada")
 
 
-@router.delete("/{categoria_id}")
-def eliminar_categoria_data(categoria_id: str, db: Session = Depends(get_db)):
-    """Elimina una categoría del sistema."""
-    exito = delete_categoria(db, categoria_id)
-    if not exito:
-        raise NotFoundError(message="No se pudo eliminar: Categoría no encontrada")
-    
-    return success_response(
-        data=None, 
-        message="Categoría eliminada exitosamente"
-    )
+@router.delete("/{categoria_id}", status_code=204)
+def eliminar_categoria_data(categoria_id: UUID, db: Session = Depends(get_db)):
+    """Borra una categoría."""
+    if not delete_categoria(db, categoria_id):
+        raise NotFoundError(message="Categoría no encontrada")
+    return None

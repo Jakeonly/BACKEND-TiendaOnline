@@ -1,27 +1,22 @@
 from datetime import datetime
-from uuid import UUID
 from decimal import Decimal
-
-from pydantic import BaseModel
-
+from uuid import UUID
+from pydantic import BaseModel, Field
 
 class OrdenBase(BaseModel):
-    total: Decimal
-    estado: str = "pendiente"
-    usuario_id: UUID
-    descuento_id: UUID | None = None
-
+    total: Decimal = Field(..., ge=0, description="Monto total de la factura")
+    estado: str = Field(default="pendiente", max_length=15, description="Estado: pendiente, pagada, cancelada")
+    usuario_id: UUID = Field(..., description="ID del cliente")
+    descuento_id: UUID | None = Field(None, description="ID del descuento aplicado si existe")
 
 class OrdenCreate(OrdenBase):
     pass
 
-
 class OrdenUpdate(BaseModel):
-    total: Decimal | None = None
-    estado: str | None = None
+    total: Decimal | None = Field(None, ge=0)
+    estado: str | None = Field(None, max_length=15)
     usuario_id: UUID | None = None
     descuento_id: UUID | None = None
-
 
 class OrdenResponse(OrdenBase):
     id: UUID

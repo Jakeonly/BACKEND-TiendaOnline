@@ -17,7 +17,7 @@ from src.core.error_handlers import (
     validation_exception_handler,
 )
 from src.core.responses import success_response
-from src.database.config import Base, engine
+from src.database.config import Base, create_tables, engine
 from src.endpoints import (
     usuarios,
     productos,
@@ -43,7 +43,7 @@ import src.entities.detalle_orden  # noqa: F401
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Función de actualización de la BD 
-    Base.metadata.create_all(bind=engine)
+    create_tables()
     yield
 
 

@@ -21,18 +21,30 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
 
 async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     """Maneja excepciones estándar de FastAPI/Starlette."""
+    detail = exc.detail
+    if isinstance(detail, dict):
+        message = detail.get("msg", detail.get("message", str(detail)))
+        details = detail.get("details", detail)
+    elif isinstance(detail, list):
+        message = "Error de solicitud"
+        details = detail
+    else:
+        message = str(detail)
+        details = None
+
     return JSONResponse(
         status_code=exc.status_code,
-        content=error_response("HTTP_ERROR", str(exc.detail)),
+        content=error_response("HTTP_ERROR", message, details),
     )
 
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     """Maneja errores de validación de Pydantic (422)."""
-    details = [{"loc": e["loc"], "msg": e["msg"]} for e in exc.errors()]
+    errors = exc.errors()
+    details = [{"loc": e["loc"], "msg": e["msg"], "type": e.get("type")} for e in errors]
     return JSONResponse(
         status_code=422,
-        content=error_response("VALIDATION_ERROR", "Datos inválidos", details),
+        content=error_response("VALIDATION_ERROR", "Datos inválidos en la petición", details),
     )
 
 
