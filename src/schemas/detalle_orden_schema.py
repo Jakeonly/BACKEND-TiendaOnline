@@ -1,16 +1,15 @@
 from datetime import datetime
-from uuid import UUID
 from decimal import Decimal
-
-from pydantic import BaseModel
+from uuid import UUID
+from pydantic import BaseModel, Field
 
 
 class DetalleOrdenBase(BaseModel):
-    cantidad: int
-    precio_unitario: Decimal
-    subtotal: Decimal
-    orden_id: UUID
-    producto_id: UUID
+    cantidad: int = Field(..., ge=1)
+    precio_unitario: Decimal = Field(..., ge=0)
+    subtotal: Decimal = Field(..., ge=0, description="Cálculo de cantidad x precio")
+    orden_id: UUID = Field(..., description="ID de la orden (factura)")
+    producto_id: UUID = Field(..., description="ID del producto comprado")
 
 
 class DetalleOrdenCreate(DetalleOrdenBase):
@@ -18,9 +17,9 @@ class DetalleOrdenCreate(DetalleOrdenBase):
 
 
 class DetalleOrdenUpdate(BaseModel):
-    cantidad: int | None = None
-    precio_unitario: Decimal | None = None
-    subtotal: Decimal | None = None
+    cantidad: int | None = Field(None, ge=1)
+    precio_unitario: Decimal | None = Field(None, ge=0)
+    subtotal: Decimal | None = Field(None, ge=0)
     orden_id: UUID | None = None
     producto_id: UUID | None = None
 

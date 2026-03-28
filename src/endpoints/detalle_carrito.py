@@ -1,55 +1,74 @@
 from uuid import UUID
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.database.config import get_db
-from src.entities.detalle_carrito import DetalleCarrito
-from src.entities.carrito import Carrito
-from src.entities.producto import Producto
-from src.schemas.detalle_carrito_schema import DetalleCarritoCreate, DetalleCarritoUpdate, DetalleCarritoResponse
+from src.schemas.detalle_carrito_schema import (
+    DetalleCarritoCreate,
+    DetalleCarritoResponse,
+)
 
-router = APIRouter(prefix="/detalle-carrito", tags=["detalle-carrito"])
+from src.crud.detalle_carrito import (
+    listar_detalles_carrito,
+    obtener_detalle_carrito,
+    crear_detalle_carrito,
+    actualizar_detalle_carrito,
+    eliminar_detalle_carrito,
+)
+from src.core.exceptions import NotFoundError
+from src.core.responses import success_response
 
-@router.get("", response_model=list[DetalleCarritoResponse])
-def listar_detalles_carrito(db: Session = Depends(get_db)):
-    return db.query(DetalleCarrito).all()
+router = APIRouter()
 
-@router.get("/{detalle_carrito_id}", response_model=DetalleCarritoResponse)
-def obtener_detalle_carrito(detalle_carrito_id: UUID, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_carrito_id).first()
-    if not detalle:
-        raise HTTPException(status_code=404, detail="Detalle no encontrado")
-    return detalle
 
-@router.post("", response_model=DetalleCarritoResponse, status_code=201)
-def crear_detalle_carrito(dato: DetalleCarritoCreate, db: Session = Depends(get_db)):
-    if not db.query(Carrito).filter(Carrito.id == dato.carrito_id).first():
-        raise HTTPException(status_code=400, detail="Carrito no encontrado")
-    if not db.query(Producto).filter(Producto.id == dato.producto_id).first():
-        raise HTTPException(status_code=400, detail="Producto no encontrado")
-    detalle = DetalleCarrito(**dato.model_dump())
-    db.add(detalle)
-    db.commit()
-    db.refresh(detalle)
-    return detalle
+@router.get("/")
+def listar_todos_los_detalles_endpoint(db: Session = Depends(get_db)):
+    """Obtiene todos los ítems dentro de los carritos."""
+    db_detalles = listar_detalles_carrito(db)
+    data = [
+        DetalleCarritoResponse.model_validate(d).model_dump(mode="json")
+        for d in db_detalles
+    ]
+    return success_response(data=data, message="Detalles de carritos obtenidos")
 
-@router.put("/{detalle_carrito_id}", response_model=DetalleCarritoResponse)
-def actualizar_detalle_carrito(detalle_carrito_id: UUID, dato: DetalleCarritoUpdate, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_carrito_id).first()
-    if not detalle:
-        raise HTTPException(status_code=404, detail="Detalle no encontrado")
-    for k, v in dato.model_dump(exclude_unset=True).items():
-        setattr(detalle, k, v)
-    db.commit()
-    db.refresh(detalle)
-    return detalle
 
-@router.delete("/{detalle_carrito_id}", status_code=204)
-def eliminar_detalle_carrito(detalle_carrito_id: UUID, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_carrito_id).first()
-    if not detalle:
-        raise HTTPException(status_code=404, detail="Detalle no encontrado")
-    db.delete(detalle)
-    db.commit()
+@router.get("/{detalle_id}")
+def obtener_detalle_carrito_endpoint(detalle_id: UUID, db: Session = Depends(get_db)):
+    """Busca un ítem de un carrito por su ID."""
+    db_detalle = obtener_detalle_carrito(db, detalle_id)
+    if not db_detalle:
+        raise NotFoundError(message=f"Detalle con ID {detalle_id} no existe")
+    data = DetalleCarritoResponse.model_validate(db_detalle).model_dump(mode="json")
+    return success_response(data=data)
+
+
+@router.post("/", status_code=201)
+def agregar_producto_al_carrito_endpoint(
+    detalle: DetalleCarritoCreate, db: Session = Depends(get_db)
+):
+    """Añade un producto al carrito."""
+    nuevo_detalle = crear_detalle_carrito(db=db, detalle=detalle)
+    data = DetalleCarritoResponse.model_validate(nuevo_detalle).model_dump(mode="json")
+    return success_response(data=data, message="Producto añadido al carrito")
+
+
+@router.put("/{detalle_id}")
+def actualizar_cantidad_en_carrito_endpoint(
+    detalle_id: UUID, detalle: DetalleCarritoCreate, db: Session = Depends(get_db)
+):
+    """Modifica la cantidad de un ítem en el carrito."""
+    db_detalle = actualizar_detalle_carrito(db, detalle_id, detalle)
+    if not db_detalle:
+        raise NotFoundError(message="No se pudo actualizar: Detalle no encontrado")
+    data = DetalleCarritoResponse.model_validate(db_detalle).model_dump(mode="json")
+    return success_response(data=data, message="Cantidad actualizada")
+
+
+@router.delete("/{detalle_id}", status_code=204)
+def quitar_producto_del_carrito_endpoint(
+    detalle_id: UUID, db: Session = Depends(get_db)
+):
+    """Elimina un ítem específico del carrito."""
+    if not eliminar_detalle_carrito(db, detalle_id):
+        raise NotFoundError(message="No se pudo eliminar: Detalle no encontrado")
     return None

@@ -17,5 +17,5 @@ __all__ = [
     "detalle_carrito_router",
     "descuentos_router",
     "ordenes_router",
-    "detalle_orden_router"
+    "detalle_orden_router",
 ]
