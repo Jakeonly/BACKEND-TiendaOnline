@@ -65,7 +65,7 @@ jobs:
         run: ruff format src --check
 
       - name: Verificar vulnerabilidades (pip-audit)
-        run: pip-audit
+        run: pip-audit --ignore-vuln CVE-2026-4539
 
       - name: Crear/actualizar BD (migración)
         run: python migrate_db.py

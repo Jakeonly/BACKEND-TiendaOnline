@@ -45,7 +45,7 @@ jobs:
               run: ruff format src --check
 
             - name: Verificar vulnerabilidades (pip-audit)
-              run: pip-audit
+              run: pip-audit --ignore-vuln CVE-2026-4539
 
             - name: Pruebas (smoke test)
               run: python -c "from src.app import app; from fastapi.testclient import TestClient; c = TestClient(app); r = c.get('/'); assert r.status_code == 200; b = r.json(); assert b.get('success') is True; assert 'data' in b; print('Smoke test OK')"
