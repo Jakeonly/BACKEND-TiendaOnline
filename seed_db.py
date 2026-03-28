@@ -20,6 +20,7 @@ from src.entities.categoria import Categoria
 from src.entities.descuento import Descuento
 from src.entities.producto import Producto
 from src.entities.usuario import Usuario
+from src.utils.security import hash_password
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
@@ -116,7 +117,11 @@ def seed_usuarios(db):
     for data in USUARIOS_INICIALES:
         if db.query(Usuario).filter(Usuario.email == data["email"]).first():
             continue
-        db.add(Usuario(**data))
+        
+        datos_usuario = data.copy()
+        datos_usuario["contraseña"] = hash_password(data["contraseña"])
+        
+        db.add(Usuario(**datos_usuario))
         print(f"  Usuario creado: {data['email']}")
     db.commit()
 

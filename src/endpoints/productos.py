@@ -1,60 +1,67 @@
 from uuid import UUID
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.database.config import get_db
-from src.entities.producto import Producto
-from src.entities.categoria import Categoria
-from src.schemas.producto_schema import ProductoCreate, ProductoUpdate, ProductoResponse
+from src.schemas.producto_schema import ProductoCreate, ProductoResponse
 
-router = APIRouter(prefix="/productos", tags=["productos"])
+from src.crud.productos import (
+    listar_productos,
+    obtener_producto,
+    crear_producto,
+    actualizar_producto,
+    eliminar_producto,
+)
+from src.core.exceptions import NotFoundError
+from src.core.responses import success_response
 
-
-@router.get("", response_model=list[ProductoResponse])
-def listar_productos(db: Session = Depends(get_db)):
-    return db.query(Producto).all()
-
-
-@router.get("/{producto_id}", response_model=ProductoResponse)
-def obtener_producto(producto_id: UUID, db: Session = Depends(get_db)):
-    producto = db.query(Producto).filter(Producto.id == producto_id).first()
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return producto
+router = APIRouter()
 
 
-@router.post("", response_model=ProductoResponse, status_code=201)
-def crear_producto(dato: ProductoCreate, db: Session = Depends(get_db)):
-    if not db.query(Categoria).filter(Categoria.id == dato.categoria_id).first():
-        raise HTTPException(status_code=400, detail="Categoría no encontrada")
-    producto = Producto(**dato.model_dump())
-    db.add(producto)
-    db.commit()
-    db.refresh(producto)
-    return producto
+@router.get("/")
+def listar_productos_endpoint(db: Session = Depends(get_db)):
+    """Obtiene todos los productos disponibles."""
+    # Llamamos a listar_productos (el del CRUD)
+    db_productos = listar_productos(db)
+    data = [
+        ProductoResponse.model_validate(p).model_dump(mode="json") for p in db_productos
+    ]
+    return success_response(data=data, message="Catálogo obtenido")
 
 
-@router.put("/{producto_id}", response_model=ProductoResponse)
-def actualizar_producto(
-    producto_id: UUID, dato: ProductoUpdate, db: Session = Depends(get_db)
+@router.get("/{producto_id}")
+def obtener_producto_endpoint(producto_id: UUID, db: Session = Depends(get_db)):
+    """Busca un producto por su ID."""
+    db_prod = obtener_producto(db, producto_id)
+    if not db_prod:
+        raise NotFoundError(message="Producto no encontrado")
+    data = ProductoResponse.model_validate(db_prod).model_dump(mode="json")
+    return success_response(data=data)
+
+
+@router.post("/", status_code=201)
+def crear_nuevo_producto(producto: ProductoCreate, db: Session = Depends(get_db)):
+    """Registra un nuevo producto en el inventario."""
+    nuevo = crear_producto(db, producto)
+    data = ProductoResponse.model_validate(nuevo).model_dump(mode="json")
+    return success_response(data=data, message="Producto creado exitosamente")
+
+
+@router.put("/{producto_id}")
+def actualizar_producto_data(
+    producto_id: UUID, producto: ProductoCreate, db: Session = Depends(get_db)
 ):
-    producto = db.query(Producto).filter(Producto.id == producto_id).first()
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    update = dato.model_dump(exclude_unset=True)
-    for k, v in update.items():
-        setattr(producto, k, v)
-    db.commit()
-    db.refresh(producto)
-    return producto
+    """Actualiza los detalles de un producto."""
+    db_prod = actualizar_producto(db, producto_id, producto)
+    if not db_prod:
+        raise NotFoundError(message="Producto no encontrado")
+    data = ProductoResponse.model_validate(db_prod).model_dump(mode="json")
+    return success_response(data=data, message="Producto actualizado")
 
 
 @router.delete("/{producto_id}", status_code=204)
-def eliminar_producto(producto_id: UUID, db: Session = Depends(get_db)):
-    producto = db.query(Producto).filter(Producto.id == producto_id).first()
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    db.delete(producto)
-    db.commit()
+def eliminar_producto_data(producto_id: UUID, db: Session = Depends(get_db)):
+    """Elimina un producto del sistema."""
+    if not eliminar_producto(db, producto_id):
+        raise NotFoundError(message="Producto no encontrado")
     return None

@@ -1,22 +1,26 @@
 from datetime import datetime
 from uuid import UUID
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from pydantic import BaseModel, EmailStr
 
-
-# Campos comunes de la entidad usuario
 class UsuarioBase(BaseModel):
-    nombre_completo: str
+    nombre_completo: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
-    telefono: str | None = None
-    direccion: str | None = None
+    telefono: str | None = Field(None, max_length=20)
+    direccion: str | None = Field(None, max_length=255)
     activo: bool = True
 
 
-# Campos añadidos al ejecutar un create
 class UsuarioCreate(UsuarioBase):
-    contraseña: str
+    contraseña: str = Field(..., min_length=8, max_length=100)
     es_admin: bool
+
+    @field_validator("contraseña")
+    @classmethod
+    def contraseña_no_vacia(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("La contraseña no puede estar vacía ni ser solo espacios")
+        return v
 
 
 # Campos modificables en un update
