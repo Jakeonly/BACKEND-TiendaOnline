@@ -10,9 +10,11 @@ from src.schemas.carrito_schema import CarritoCreate, CarritoUpdate, CarritoResp
 
 router = APIRouter(prefix="/carritos", tags=["carritos"])
 
+
 @router.get("", response_model=list[CarritoResponse])
 def listar_carritos(db: Session = Depends(get_db)):
     return db.query(Carrito).all()
+
 
 @router.get("/{carrito_id}", response_model=CarritoResponse)
 def obtener_carrito(carrito_id: UUID, db: Session = Depends(get_db)):
@@ -20,6 +22,7 @@ def obtener_carrito(carrito_id: UUID, db: Session = Depends(get_db)):
     if not carrito:
         raise HTTPException(status_code=404, detail="Carrito no encontrado")
     return carrito
+
 
 @router.post("", response_model=CarritoResponse, status_code=201)
 def crear_carrito(dato: CarritoCreate, db: Session = Depends(get_db)):
@@ -31,8 +34,11 @@ def crear_carrito(dato: CarritoCreate, db: Session = Depends(get_db)):
     db.refresh(carrito)
     return carrito
 
+
 @router.put("/{carrito_id}", response_model=CarritoResponse)
-def actualizar_carrito(carrito_id: UUID, dato: CarritoUpdate, db: Session = Depends(get_db)):
+def actualizar_carrito(
+    carrito_id: UUID, dato: CarritoUpdate, db: Session = Depends(get_db)
+):
     carrito = db.query(Carrito).filter(Carrito.id == carrito_id).first()
     if not carrito:
         raise HTTPException(status_code=404, detail="Carrito no encontrado")
@@ -41,6 +47,7 @@ def actualizar_carrito(carrito_id: UUID, dato: CarritoUpdate, db: Session = Depe
     db.commit()
     db.refresh(carrito)
     return carrito
+
 
 @router.delete("/{carrito_id}", status_code=204)
 def eliminar_carrito(carrito_id: UUID, db: Session = Depends(get_db)):

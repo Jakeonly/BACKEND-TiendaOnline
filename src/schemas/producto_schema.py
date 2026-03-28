@@ -4,7 +4,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
-#Campos comunes de la entidad producto
+
+# Campos comunes de la entidad producto
 class ProductoBase(BaseModel):
     nombre: str
     descripcion: str | None = None

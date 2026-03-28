@@ -1,6 +1,7 @@
 """
 CRUD Orden
 """
+
 from src.crud.client import _delete, _get, _post, _put
 
 
@@ -22,9 +23,10 @@ def crear_orden(
         "total": total,
         "usuario_id": usuario_id,
         "estado": estado,
-        "descuento_id": descuento_id, 
+        "descuento_id": descuento_id,
     }
     return _post("/ordenes", json=payload)
+
 
 def actualizar_orden(
     orden_id: str,

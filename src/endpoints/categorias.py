@@ -5,13 +5,19 @@ from sqlalchemy.orm import Session
 
 from src.database.config import get_db
 from src.entities.categoria import Categoria
-from src.schemas.categoria_schema import CategoriaCreate, CategoriaUpdate, CategoriaResponse
+from src.schemas.categoria_schema import (
+    CategoriaCreate,
+    CategoriaUpdate,
+    CategoriaResponse,
+)
 
 router = APIRouter(prefix="/categorias", tags=["categorias"])
+
 
 @router.get("", response_model=list[CategoriaResponse])
 def listar_categorias(db: Session = Depends(get_db)):
     return db.query(Categoria).all()
+
 
 @router.get("/{categoria_id}", response_model=CategoriaResponse)
 def obtener_categoria(categoria_id: UUID, db: Session = Depends(get_db)):
@@ -19,6 +25,7 @@ def obtener_categoria(categoria_id: UUID, db: Session = Depends(get_db)):
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
     return categoria
+
 
 @router.post("", response_model=CategoriaResponse, status_code=201)
 def crear_categoria(dato: CategoriaCreate, db: Session = Depends(get_db)):
@@ -30,8 +37,11 @@ def crear_categoria(dato: CategoriaCreate, db: Session = Depends(get_db)):
     db.refresh(categoria)
     return categoria
 
+
 @router.put("/{categoria_id}", response_model=CategoriaResponse)
-def actualizar_categoria(categoria_id: UUID, dato: CategoriaUpdate, db: Session = Depends(get_db)):
+def actualizar_categoria(
+    categoria_id: UUID, dato: CategoriaUpdate, db: Session = Depends(get_db)
+):
     categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
@@ -41,6 +51,7 @@ def actualizar_categoria(categoria_id: UUID, dato: CategoriaUpdate, db: Session 
     db.commit()
     db.refresh(categoria)
     return categoria
+
 
 @router.delete("/{categoria_id}", status_code=204)
 def eliminar_categoria(categoria_id: UUID, db: Session = Depends(get_db)):

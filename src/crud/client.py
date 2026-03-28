@@ -1,6 +1,7 @@
 """
 Cliente HTTP para conectar con los endpoints de la API FastAPI.
 """
+
 import httpx
 
 BASE_URL = "http://localhost:8000"

@@ -2,6 +2,7 @@
 Aplicación FastAPI. Ejecutar con:
   uvicorn src.app:app --reload --host 0.0.0.0 --port 8000
 """
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -10,17 +11,25 @@ from src.database.config import create_tables
 
 # Importamos los routers de la carpeta endpoints
 from src.endpoints import (
-    carritos, categorias, descuentos, detalle_carrito, 
-    detalle_orden, ordenes, productos, usuarios
+    carritos,
+    categorias,
+    descuentos,
+    detalle_carrito,
+    detalle_orden,
+    ordenes,
+    productos,
+    usuarios,
 )
 
 # Importar modelos para que Base.metadata los conozca al crear las tablas
 import src.entities  # noqa: F401
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_tables()
     yield
+
 
 app = FastAPI(
     title="API Tienda Online - Proyecto ITM",
@@ -38,10 +47,11 @@ app.include_router(ordenes.router)
 app.include_router(detalle_carrito.router)
 app.include_router(detalle_orden.router)
 
+
 @app.get("/")
 def inicio():
     return {
         "mensaje": "API Tienda Online lista",
         "documentacion": "/docs",
-        "redoc": "/redoc"
+        "redoc": "/redoc",
     }
