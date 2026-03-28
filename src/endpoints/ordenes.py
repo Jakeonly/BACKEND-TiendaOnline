@@ -1,56 +1,75 @@
-from uuid import UUID
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.database.config import get_db
-from src.entities.orden import Orden
-from src.entities.usuario import Usuario
-from src.entities.descuento import Descuento
-from src.schemas.orden_schema import OrdenCreate, OrdenUpdate, OrdenResponse
+from src.schemas.orden_schema import OrdenCreate, OrdenResponse
+from src.crud.orden import (
+    get_ordenes,
+    get_orden_by_id,
+    create_orden,
+    update_orden,
+    delete_orden,
+)
+# Capa Core
+from src.core.exceptions import NotFoundError
+from src.core.responses import success_response
 
-router = APIRouter(prefix="/ordenes", tags=["ordenes"])
+router = APIRouter()
 
-@router.get("", response_model=list[OrdenResponse])
-def listar_ordenes(db: Session = Depends(get_db)):
-    return db.query(Orden).all()
 
-@router.get("/{orden_id}", response_model=OrdenResponse)
-def obtener_orden(orden_id: UUID, db: Session = Depends(get_db)):
-    orden = db.query(Orden).filter(Orden.id == orden_id).first()
-    if not orden:
-        raise HTTPException(status_code=404, detail="Orden no encontrada")
-    return orden
+@router.get("/")
+def listar_todas_las_ordenes(db: Session = Depends(get_db)):
+    """Obtiene el historial de todas las órdenes de compra."""
+    db_ordenes = get_ordenes(db)
+    return success_response(
+        data=db_ordenes, 
+        message="Historial de órdenes obtenido"
+    )
 
-@router.post("", response_model=OrdenResponse, status_code=201)
-def crear_orden(dato: OrdenCreate, db: Session = Depends(get_db)):
-    if not db.query(Usuario).filter(Usuario.id == dato.usuario_id).first():
-        raise HTTPException(status_code=400, detail="Usuario no encontrado")
-    if dato.descuento_id:
-        if not db.query(Descuento).filter(Descuento.id == dato.descuento_id).first():
-            raise HTTPException(status_code=400, detail="Descuento no encontrado")
-    orden = Orden(**dato.model_dump())
-    db.add(orden)
-    db.commit()
-    db.refresh(orden)
-    return orden
 
-@router.put("/{orden_id}", response_model=OrdenResponse)
-def actualizar_orden(orden_id: UUID, dato: OrdenUpdate, db: Session = Depends(get_db)):
-    orden = db.query(Orden).filter(Orden.id == orden_id).first()
-    if not orden:
-        raise HTTPException(status_code=404, detail="Orden no encontrada")
-    for k, v in dato.model_dump(exclude_unset=True).items():
-        setattr(orden, k, v)
-    db.commit()
-    db.refresh(orden)
-    return orden
+@router.get("/{orden_id}")
+def obtener_orden_por_id(orden_id: str, db: Session = Depends(get_db)):
+    """Busca una orden específica por su identificador único."""
+    db_orden = get_orden_by_id(db, orden_id)
+    if not db_orden:
+        raise NotFoundError(message=f"La orden con ID {orden_id} no existe")
+    
+    return success_response(data=db_orden)
 
-@router.delete("/{orden_id}", status_code=204)
-def eliminar_orden(orden_id: UUID, db: Session = Depends(get_db)):
-    orden = db.query(Orden).filter(Orden.id == orden_id).first()
-    if not orden:
-        raise HTTPException(status_code=404, detail="Orden no encontrada")
-    db.delete(orden)
-    db.commit()
-    return None
+
+@router.post("/")
+def crear_nueva_orden_compra(orden: OrdenCreate, db: Session = Depends(get_db)):
+    """Registra una nueva orden de compra en el sistema."""
+    nueva_orden = create_orden(db=db, orden=orden)
+    return success_response(
+        data=nueva_orden, 
+        message="Orden de compra creada exitosamente"
+    )
+
+
+@router.put("/{orden_id}")
+def actualizar_estado_orden(
+    orden_id: str, orden: OrdenCreate, db: Session = Depends(get_db)
+):
+    """Actualiza la información o estado de una orden."""
+    db_orden = update_orden(db, orden_id, orden)
+    if not db_orden:
+        raise NotFoundError(message="No se pudo actualizar: Orden no encontrada")
+    
+    return success_response(
+        data=db_orden, 
+        message="Orden actualizada correctamente"
+    )
+
+
+@router.delete("/{orden_id}")
+def cancelar_eliminar_orden(orden_id: str, db: Session = Depends(get_db)):
+    """Elimina una orden del registro."""
+    exito = delete_orden(db, orden_id)
+    if not exito:
+        raise NotFoundError(message="No se pudo eliminar: Orden no encontrada")
+    
+    return success_response(
+        data=None, 
+        message="Orden eliminada del sistema"
+    )

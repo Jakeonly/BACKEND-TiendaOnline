@@ -1,55 +1,77 @@
-from uuid import UUID
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.database.config import get_db
-from src.entities.detalle_orden import DetalleOrden
-from src.entities.orden import Orden
-from src.entities.producto import Producto
-from src.schemas.detalle_orden_schema import DetalleOrdenCreate, DetalleOrdenUpdate, DetalleOrdenResponse
+from src.schemas.detalle_orden_schema import DetalleOrdenCreate, DetalleOrdenResponse
+from src.crud.detalle_orden import (
+    get_detalles_orden,
+    get_detalle_orden_by_id,
+    create_detalle_orden,
+    update_detalle_orden,
+    delete_detalle_orden,
+)
+# Importamos la Capa Core
+from src.core.exceptions import NotFoundError
+from src.core.responses import success_response
 
-router = APIRouter(prefix="/detalle-orden", tags=["detalle-orden"])
+router = APIRouter()
 
-@router.get("", response_model=list[DetalleOrdenResponse])
-def listar_detalles_orden(db: Session = Depends(get_db)):
-    return db.query(DetalleOrden).all()
 
-@router.get("/{detalle_orden_id}", response_model=DetalleOrdenResponse)
-def obtener_detalle_orden(detalle_orden_id: UUID, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleOrden).filter(DetalleOrden.id == detalle_orden_id).first()
-    if not detalle:
-        raise HTTPException(status_code=404, detail="Detalle no encontrado")
-    return detalle
+@router.get("/")
+def listar_todos_los_detalles_de_ordenes(db: Session = Depends(get_db)):
+    """Obtiene el desglose de productos de todas las órdenes."""
+    db_detalles = get_detalles_orden(db)
+    return success_response(
+        data=db_detalles, 
+        message="Detalles de órdenes obtenidos correctamente"
+    )
 
-@router.post("", response_model=DetalleOrdenResponse, status_code=201)
-def crear_detalle_orden(dato: DetalleOrdenCreate, db: Session = Depends(get_db)):
-    if not db.query(Orden).filter(Orden.id == dato.orden_id).first():
-        raise HTTPException(status_code=400, detail="Orden no encontrada")
-    if not db.query(Producto).filter(Producto.id == dato.producto_id).first():
-        raise HTTPException(status_code=400, detail="Producto no encontrado")
-    detalle = DetalleOrden(**dato.model_dump())
-    db.add(detalle)
-    db.commit()
-    db.refresh(detalle)
-    return detalle
 
-@router.put("/{detalle_orden_id}", response_model=DetalleOrdenResponse)
-def actualizar_detalle_orden(detalle_orden_id: UUID, dato: DetalleOrdenUpdate, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleOrden).filter(DetalleOrden.id == detalle_orden_id).first()
-    if not detalle:
-        raise HTTPException(status_code=404, detail="Detalle no encontrado")
-    for k, v in dato.model_dump(exclude_unset=True).items():
-        setattr(detalle, k, v)
-    db.commit()
-    db.refresh(detalle)
-    return detalle
+@router.get("/{detalle_id}")
+def obtener_detalle_orden_por_id(detalle_id: str, db: Session = Depends(get_db)):
+    """Busca un ítem específico de una orden por su ID."""
+    db_detalle = get_detalle_orden_by_id(db, detalle_id)
+    if not db_detalle:
+        raise NotFoundError(message=f"El detalle de orden con ID {detalle_id} no existe")
+    
+    return success_response(data=db_detalle)
 
-@router.delete("/{detalle_orden_id}", status_code=204)
-def eliminar_detalle_orden(detalle_orden_id: UUID, db: Session = Depends(get_db)):
-    detalle = db.query(DetalleOrden).filter(DetalleOrden.id == detalle_orden_id).first()
-    if not detalle:
-        raise HTTPException(status_code=404, detail="Detalle no encontrado")
-    db.delete(detalle)
-    db.commit()
-    return None
+
+@router.post("/")
+def registrar_producto_en_orden(
+    detalle: DetalleOrdenCreate, db: Session = Depends(get_db)
+):
+    """Registra un producto, su cantidad y precio en una orden específica."""
+    nuevo_detalle = create_detalle_orden(db=db, detalle=detalle)
+    return success_response(
+        data=nuevo_detalle, 
+        message="Producto registrado en la orden con éxito"
+    )
+
+
+@router.put("/{detalle_id}")
+def actualizar_detalle_orden(
+    detalle_id: str, detalle: DetalleOrdenCreate, db: Session = Depends(get_db)
+):
+    """Actualiza la información de un ítem dentro de una orden."""
+    db_detalle = update_detalle_orden(db, detalle_id, detalle)
+    if not db_detalle:
+        raise NotFoundError(message="No se pudo actualizar: Detalle de orden no encontrado")
+    
+    return success_response(
+        data=db_detalle, 
+        message="Detalle de orden actualizado"
+    )
+
+
+@router.delete("/{detalle_id}")
+def eliminar_detalle_orden(detalle_id: str, db: Session = Depends(get_db)):
+    """Elimina un ítem de una orden específica."""
+    exito = delete_detalle_orden(db, detalle_id)
+    if not exito:
+        raise NotFoundError(message="No se pudo eliminar: Detalle de orden no encontrado")
+    
+    return success_response(
+        data=None, 
+        message="Detalle de orden eliminado"
+    )

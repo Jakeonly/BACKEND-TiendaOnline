@@ -15,5 +15,5 @@ __all__ = [
     "DetalleCarrito",
     "Descuento",
     "Orden",
-    "DetalleOrden"
+    "DetalleOrden",
 ]

@@ -1,52 +1,80 @@
-from uuid import UUID
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.database.config import get_db
-from src.entities.usuario import Usuario
-from src.schemas.usuario_schema import UsuarioCreate, UsuarioUpdate, UsuarioResponse
+from src.schemas.usuario_schema import UsuarioCreate, UsuarioResponse
+from src.crud.usuarios import (
+    get_usuarios,
+    get_usuario_by_id,
+    get_usuario_by_email,
+    create_usuario,
+    update_usuario,
+    delete_usuario,
+)
+# Importamos las herramientas de la Capa Core
+from src.core.exceptions import NotFoundError, ConflictError
+from src.core.responses import success_response
 
-router = APIRouter(prefix="/usuarios", tags=["usuarios"])
+router = APIRouter()
 
-@router.get("", response_model=list[UsuarioResponse])
+
+@router.get("/")
 def listar_usuarios(db: Session = Depends(get_db)):
-    return db.query(Usuario).all()
+    """Obtiene la lista de todos los usuarios registrados."""
+    db_usuarios = get_usuarios(db)
+    return success_response(
+        data=db_usuarios, 
+        message="Lista de usuarios obtenida exitosamente"
+    )
 
-@router.get("/{usuario_id}", response_model=UsuarioResponse)
-def obtener_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
-    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return usuario
 
-@router.post("", response_model=UsuarioResponse, status_code=201)
-def crear_usuario(dato: UsuarioCreate, db: Session = Depends(get_db)):
-    if db.query(Usuario).filter(Usuario.email == dato.email).first():
-        raise HTTPException(status_code=400, detail="Email ya registrado")
-    usuario = Usuario(**dato.model_dump())
-    db.add(usuario)
-    db.commit()
-    db.refresh(usuario)
-    return usuario
+@router.get("/{usuario_id}")
+def obtener_usuario(usuario_id: str, db: Session = Depends(get_db)):
+    """Busca un usuario específico por su ID."""
+    db_usuario = get_usuario_by_id(db, usuario_id)
+    if not db_usuario:
+        raise NotFoundError(message=f"El usuario con ID {usuario_id} no existe")
+    
+    return success_response(data=db_usuario)
 
-@router.put("/{usuario_id}", response_model=UsuarioResponse)
-def actualizar_usuario(usuario_id: UUID, dato: UsuarioUpdate, db: Session = Depends(get_db)):
-    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    update = dato.model_dump(exclude_unset=True)
-    for k, v in update.items():
-        setattr(usuario, k, v)
-    db.commit()
-    db.refresh(usuario)
-    return usuario
 
-@router.delete("/{usuario_id}", status_code=204)
-def eliminar_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
-    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    db.delete(usuario)
-    db.commit()
-    return None
+@router.post("/")
+def crear_nuevo_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
+    """Registra un nuevo usuario verificando que el email sea único."""
+    db_usuario = get_usuario_by_email(db, email=usuario.email)
+    if db_usuario:
+        raise ConflictError(message="El correo electrónico ya está registrado")
+    
+    nuevo_usuario = create_usuario(db=db, usuario=usuario)
+    return success_response(
+        data=nuevo_usuario, 
+        message="Usuario registrado correctamente"
+    )
+
+
+@router.put("/{usuario_id}")
+def actualizar_usuario_data(
+    usuario_id: str, usuario: UsuarioCreate, db: Session = Depends(get_db)
+):
+    """Actualiza la información de un usuario existente."""
+    db_usuario = update_usuario(db, usuario_id, usuario)
+    if not db_usuario:
+        raise NotFoundError(message="No se pudo actualizar: Usuario no encontrado")
+    
+    return success_response(
+        data=db_usuario, 
+        message="Datos de usuario actualizados"
+    )
+
+
+@router.delete("/{usuario_id}")
+def eliminar_usuario_data(usuario_id: str, db: Session = Depends(get_db)):
+    """Elimina un usuario de la base de datos."""
+    exito = delete_usuario(db, usuario_id)
+    if not exito:
+        raise NotFoundError(message="No se pudo eliminar: Usuario no encontrado")
+    
+    return success_response(
+        data=None, 
+        message="Usuario eliminado exitosamente"
+    )
