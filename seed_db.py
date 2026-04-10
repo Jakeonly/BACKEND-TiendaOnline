@@ -28,8 +28,8 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 USUARIOS_INICIALES = [
     {
         "nombre_completo": "Administrador Tienda",
-        "email": "admin@tienda.local",
-        "contraseña": "Admin123!",
+        "email": "admin@gmail.com",
+        "contraseña": "admin123",
         "telefono": "3001234567",
         "direccion": "Cra 10 # 20-30",
         "activo": True,
@@ -37,8 +37,8 @@ USUARIOS_INICIALES = [
     },
     {
         "nombre_completo": "Cliente Demo",
-        "email": "cliente@tienda.local",
-        "contraseña": "Cliente123!",
+        "email": "cliente@gmail.com",
+        "contraseña": "cliente123",
         "telefono": "3000000000",
         "direccion": "Calle 45 # 12-55",
         "activo": True,
@@ -115,12 +115,18 @@ def construir_descuentos_iniciales() -> list[dict]:
 
 def seed_usuarios(db):
     for data in USUARIOS_INICIALES:
-        if db.query(Usuario).filter(Usuario.email == data["email"]).first():
+        existente = db.query(Usuario).filter(Usuario.email == data["email"]).first()
+
+        if existente:
+            # Si un usuario ya existe con contraseña sin hash bcrypt, la corregimos.
+            if not (existente.contraseña or "").startswith("$2"):
+                existente.contraseña = hash_password(existente.contraseña)
+                print(f"  Usuario actualizado (hash): {data['email']}")
             continue
-        
+
         datos_usuario = data.copy()
         datos_usuario["contraseña"] = hash_password(data["contraseña"])
-        
+
         db.add(Usuario(**datos_usuario))
         print(f"  Usuario creado: {data['email']}")
     db.commit()

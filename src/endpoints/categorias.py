@@ -3,15 +3,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.database.config import get_db
-from src.schemas.categoria_schema import CategoriaCreate, CategoriaResponse
-
-from src.crud.categoria import (
-    listar_categorias,
-    obtener_categoria,
-    crear_categoria,
-    actualizar_categoria,
-    eliminar_categoria,
-)
+from src.entities.categoria import Categoria
+from src.schemas.categoria_schema import CategoriaCreate, CategoriaUpdate, CategoriaResponse
 from src.core.exceptions import NotFoundError
 from src.core.responses import success_response
 
@@ -21,8 +14,7 @@ router = APIRouter()
 @router.get("/")
 def listar_categorias_endpoint(db: Session = Depends(get_db)):
     """Lista todas las categorías de la tienda."""
-    # Llamamos a listar_categorias del CRUD
-    db_cats = listar_categorias(db)
+    db_cats = db.query(Categoria).all()
     data = [
         CategoriaResponse.model_validate(c).model_dump(mode="json") for c in db_cats
     ]
@@ -32,7 +24,7 @@ def listar_categorias_endpoint(db: Session = Depends(get_db)):
 @router.get("/{categoria_id}")
 def obtener_categoria_endpoint(categoria_id: UUID, db: Session = Depends(get_db)):
     """Obtiene una categoría por su ID."""
-    db_cat = obtener_categoria(db, categoria_id)
+    db_cat = db.query(Categoria).filter(Categoria.id == categoria_id).first()
     if not db_cat:
         raise NotFoundError(message="Categoría no encontrada")
     data = CategoriaResponse.model_validate(db_cat).model_dump(mode="json")
@@ -42,19 +34,30 @@ def obtener_categoria_endpoint(categoria_id: UUID, db: Session = Depends(get_db)
 @router.post("/", status_code=201)
 def crear_categoria_endpoint(categoria: CategoriaCreate, db: Session = Depends(get_db)):
     """Crea una nueva categoría."""
-    nuevo = crear_categoria(db, categoria)
+    nuevo = Categoria(**categoria.model_dump())
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+
     data = CategoriaResponse.model_validate(nuevo).model_dump(mode="json")
     return success_response(data=data, message="Categoría creada")
 
 
 @router.put("/{categoria_id}")
 def actualizar_categoria_endpoint(
-    categoria_id: UUID, categoria: CategoriaCreate, db: Session = Depends(get_db)
+    categoria_id: UUID, categoria: CategoriaUpdate, db: Session = Depends(get_db)
 ):
     """Modifica una categoría existente."""
-    db_cat = actualizar_categoria(db, categoria_id, categoria)
+    db_cat = db.query(Categoria).filter(Categoria.id == categoria_id).first()
     if not db_cat:
         raise NotFoundError(message="Categoría no encontrada")
+
+    for field, value in categoria.model_dump(exclude_unset=True).items():
+        setattr(db_cat, field, value)
+
+    db.commit()
+    db.refresh(db_cat)
+
     data = CategoriaResponse.model_validate(db_cat).model_dump(mode="json")
     return success_response(data=data, message="Categoría actualizada")
 
@@ -62,6 +65,11 @@ def actualizar_categoria_endpoint(
 @router.delete("/{categoria_id}", status_code=204)
 def eliminar_categoria_endpoint(categoria_id: UUID, db: Session = Depends(get_db)):
     """Borra una categoría."""
-    if not eliminar_categoria(db, categoria_id):
+    db_cat = db.query(Categoria).filter(Categoria.id == categoria_id).first()
+    if not db_cat:
         raise NotFoundError(message="Categoría no encontrada")
+
+    db.delete(db_cat)
+    db.commit()
+
     return None

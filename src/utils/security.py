@@ -7,8 +7,9 @@ def hash_password(plain: str) -> str:
     return hashed.decode("utf-8")
 
 
-#
-
-
-def verify_password(plain: str, hashed: str) -> str:
-    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+def verify_password(plain: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    except (ValueError, AttributeError):
+        # Hash inválido/dañado en BD: se trata como credencial no válida.
+        return False
