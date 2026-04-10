@@ -29,7 +29,9 @@ def listar_todos_los_detalles_endpoint(db: Session = Depends(get_db)):
 @router.get("/{detalle_id}")
 def obtener_detalle_carrito_endpoint(detalle_id: UUID, db: Session = Depends(get_db)):
     """Busca un ítem de un carrito por su ID."""
-    db_detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_id).first()
+    db_detalle = (
+        db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_id).first()
+    )
     if not db_detalle:
         raise NotFoundError(message=f"Detalle con ID {detalle_id} no existe")
     data = DetalleCarritoResponse.model_validate(db_detalle).model_dump(mode="json")
@@ -55,7 +57,9 @@ def actualizar_cantidad_en_carrito_endpoint(
     detalle_id: UUID, detalle: DetalleCarritoUpdate, db: Session = Depends(get_db)
 ):
     """Modifica la cantidad de un ítem en el carrito."""
-    db_detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_id).first()
+    db_detalle = (
+        db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_id).first()
+    )
     if not db_detalle:
         raise NotFoundError(message="No se pudo actualizar: Detalle no encontrado")
 
@@ -74,7 +78,9 @@ def quitar_producto_del_carrito_endpoint(
     detalle_id: UUID, db: Session = Depends(get_db)
 ):
     """Elimina un ítem específico del carrito."""
-    db_detalle = db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_id).first()
+    db_detalle = (
+        db.query(DetalleCarrito).filter(DetalleCarrito.id == detalle_id).first()
+    )
     if not db_detalle:
         raise NotFoundError(message="No se pudo eliminar: Detalle no encontrado")
 

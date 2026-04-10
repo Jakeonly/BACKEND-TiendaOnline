@@ -8,7 +8,7 @@ Uso:
 Requiere DATABASE_URL y que las tablas ya existan (init_db.py o migrate_db.py).
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -94,7 +94,7 @@ PRODUCTOS_INICIALES = [
 
 
 def construir_descuentos_iniciales() -> list[dict]:
-    ahora = datetime.utcnow()
+    ahora = datetime.now(timezone.utc)
     return [
         {
             "codigo": "BIENVENIDA10",

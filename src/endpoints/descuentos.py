@@ -4,7 +4,11 @@ from sqlalchemy.orm import Session
 
 from src.database.config import get_db
 from src.entities.descuento import Descuento
-from src.schemas.descuento_schema import DescuentoCreate, DescuentoUpdate, DescuentoResponse
+from src.schemas.descuento_schema import (
+    DescuentoCreate,
+    DescuentoUpdate,
+    DescuentoResponse,
+)
 from src.core.exceptions import NotFoundError, BadRequestError
 from src.core.responses import success_response
 
@@ -59,7 +63,11 @@ def actualizar_descuento_endpoint(
         raise NotFoundError(message="No se pudo actualizar: Descuento no encontrado")
 
     update_data = descuento.model_dump(exclude_unset=True)
-    if "porcentaje" in update_data and update_data["porcentaje"] is not None and update_data["porcentaje"] > 100:
+    if (
+        "porcentaje" in update_data
+        and update_data["porcentaje"] is not None
+        and update_data["porcentaje"] > 100
+    ):
         raise BadRequestError(message="El porcentaje no puede ser mayor a 100")
 
     for field, value in update_data.items():
