@@ -60,3 +60,23 @@ Al iniciar, la API estará disponible en `http://localhost:8000` y podrás inter
 - `src/entities/`: Definición de los modelos de la base de datos.
 - `src/schemas/`: Esquemas de Pydantic para validación de datos.
 - `src/database/`: Configuración de la conexión a la base de datos.
+
+### 🔐 Seguridad implementada (JWT + CORS)
+
+Resumen de lo que se implementó en este proyecto:
+
+- **Login JWT real en la API**: `POST /usuarios/login` valida por `email` + `contraseña`, verifica usuario activo y administrador, y devuelve `access_token` tipo `bearer`.
+- **Token usado en el cliente de consola**: en `main.py` se añadió opción de **Iniciar sesión** y **Cerrar sesión**. Tras login exitoso, el token se guarda y se envía automáticamente en peticiones posteriores.
+- **Rutas de usuarios protegidas**: listar, obtener, actualizar y eliminar usuario requieren JWT.
+- **Contraseñas hasheadas con bcrypt**: se reforzó validación para evitar error 500 cuando existe hash inválido en BD.
+- **CORS activo en FastAPI**: configurado en `src/app.py` con orígenes desde `CORS_ORIGINS`, credenciales habilitadas, métodos comunes y cabeceras `Authorization`, `Content-Type`, `Accept`.
+
+Variables de entorno relevantes (archivo `.env`):
+
+- `JWT_SECRET_KEY`
+- `JWT_ALGORITHM` (por defecto `HS256`)
+- `ACCESS_TOKEN_EXPIRE_MINUTES`
+- `CORS_ORIGINS`
+- `DATABASE_URL`
+
+Además, se agregó `.env.example` para subir al repositorio sin exponer secretos reales.

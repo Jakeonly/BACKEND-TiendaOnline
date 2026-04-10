@@ -26,6 +26,8 @@ from src.crud import (
     listar_detalles_carrito, obtener_detalle_carrito, crear_detalle_carrito, actualizar_detalle_carrito, eliminar_detalle_carrito,
     listar_detalles_orden, obtener_detalle_orden, crear_detalle_orden, actualizar_detalle_orden, eliminar_detalle_orden
 )
+from src.crud.client import set_auth_token
+from src.crud.login import login as login_usuario
 
 # --- UTILIDAD PARA VISUALIZACIÓN ---
 
@@ -189,6 +191,29 @@ def menu_descuentos():
                 print("  Descuento eliminado.")
         except Exception as e: print(f"  Error: {e}")
 
+
+def menu_login() -> bool:
+    """Solicita credenciales y guarda el JWT en el cliente HTTP compartido."""
+    print("\n--- [AUTH] INICIAR SESIÓN ---")
+    email = input("Email: ").strip()
+    contraseña = input("Contraseña: ").strip()
+    try:
+        respuesta = login_usuario(email=email, contraseña=contraseña)
+        if isinstance(respuesta, dict) and respuesta.get("access_token"):
+            print("  Login exitoso. Token JWT cargado en sesión.")
+            return True
+        print("  Login sin token. Revisa credenciales o respuesta del servidor.")
+        return False
+    except Exception as e:
+        print(f"  Error de autenticación: {e}")
+        return False
+
+
+def menu_logout() -> None:
+    """Limpia el JWT del cliente para cerrar sesión en consola."""
+    set_auth_token(None)
+    print("  Sesión cerrada. Token eliminado.")
+
 # --- ARRANQUE DEL SISTEMA ---
 
 def _iniciar_api():
@@ -209,28 +234,37 @@ def main():
     time.sleep(2.5)
     print("API lista en http://localhost:8000\n")
 
+    autenticado = False
+
     while True:
         print("\n========== MENÚ PRINCIPAL ==========")
-        print("1. Usuarios")
-        print("2. Categorías")
-        print("3. Productos")
-        print("4. Carritos y Detalles")
-        print("5. Órdenes y Detalles")
-        print("6. Descuentos")
+        print("1. Iniciar sesión")
+        print("2. Usuarios")
+        print("3. Categorías")
+        print("4. Productos")
+        print("5. Carritos y Detalles")
+        print("6. Órdenes y Detalles")
+        print("7. Descuentos")
+        print("8. Cerrar sesión")
         print("0. Salir del Sistema")
         print("====================================")
+        print(f"Estado sesión JWT: {'ACTIVA' if autenticado else 'INACTIVA'}")
         
         opcion = input("Seleccione una categoría: ").strip()
         
         if opcion == "0":
             print("Cerrando aplicación. ¡Hasta luego!")
             break
-        elif opcion == "1": menu_usuarios()
-        elif opcion == "2": menu_categorias()
-        elif opcion == "3": menu_productos()
-        elif opcion == "4": menu_carritos()
-        elif opcion == "5": menu_ordenes()
-        elif opcion == "6": menu_descuentos()
+        elif opcion == "1": autenticado = menu_login()
+        elif opcion == "2": menu_usuarios()
+        elif opcion == "3": menu_categorias()
+        elif opcion == "4": menu_productos()
+        elif opcion == "5": menu_carritos()
+        elif opcion == "6": menu_ordenes()
+        elif opcion == "7": menu_descuentos()
+        elif opcion == "8":
+            menu_logout()
+            autenticado = False
         else:
             print("Opción no válida. Intente de nuevo.")
 
