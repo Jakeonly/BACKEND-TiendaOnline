@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException, RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.exceptions import AppException
 from src.core.error_handlers import (
@@ -16,6 +17,7 @@ from src.core.error_handlers import (
     http_exception_handler,
     validation_exception_handler,
 )
+from src.core.config import get_settings
 from src.core.responses import success_response
 from src.database.config import create_tables
 from src.endpoints import (
@@ -54,6 +56,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+settings = get_settings()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list(),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
+)
+
 # Manejadores globales de excepciones (Capa Core)
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
@@ -73,7 +85,7 @@ app.include_router(
 app.include_router(
     detalle_orden.router, prefix="/detalle-orden", tags=["Detalle Orden"]
 )
-app.include_router(login.router, prefix="/auth", tags=["Autenticación"])
+app.include_router(login.router, tags=["Autenticación"])
 
 
 @app.get("/")
