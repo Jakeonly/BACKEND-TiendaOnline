@@ -6,11 +6,12 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from uuid import UUID
 
+import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from jwt import InvalidTokenError
 
 from src.core.config import Settings, get_settings
 from src.database.config import get_db
@@ -74,7 +75,7 @@ async def get_current_user(
         if not sub:
             raise HTTPException(status_code=401, detail="Token inválido")
         user_id = UUID(sub)
-    except (JWTError, ValueError):
+    except (InvalidTokenError, ValueError):
         raise HTTPException(
             status_code=401,
             detail="Token inválido o expirado",
