@@ -3,6 +3,9 @@
 ## Sistema de información para una tienda online
 Este proyecto es un sistema de gestión para una tienda en línea desarrollado como parte del programa de formación en el ITM. El sistema ofrece un backend robusto construido con FastAPI y un menú interactivo por consola para gestionar el ciclo de vida completo de una tienda, desde usuarios y productos hasta órdenes de compra y descuentos.
 
+## 🎬 Video de Presentación
+[Ver video explicativo del proyecto](https://drive.google.com/file/d/1KoEwO1R_xJXrAMhYYMtHhKgp7f3kle-y/view?usp=sharing)
+
 ### 🚀 Características Principales
 - **API REST**: Implementada con FastAPI para un alto rendimiento y documentación automática.
 - **Gestión de Base de Datos**: Uso de SQLAlchemy como ORM para interactuar con la base de datos y Alembic para la gestión de migraciones.
