@@ -25,3 +25,4 @@ class Orden(Base):
     usuario = relationship("Usuario", back_populates="ordenes")
     descuento = relationship("Descuento", back_populates="ordenes")
     detalles = relationship("DetalleOrden", back_populates="orden")
+    pagos = relationship("Pago", back_populates="orden")

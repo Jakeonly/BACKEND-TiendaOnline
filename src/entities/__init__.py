@@ -6,6 +6,7 @@ from src.entities.detalle_carrito import DetalleCarrito
 from src.entities.descuento import Descuento
 from src.entities.orden import Orden
 from src.entities.detalle_orden import DetalleOrden
+from src.entities.pago import Pago
 
 __all__ = [
     "Usuario",
@@ -16,4 +17,5 @@ __all__ = [
     "Descuento",
     "Orden",
     "DetalleOrden",
+    "Pago",
 ]

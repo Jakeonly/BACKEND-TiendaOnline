@@ -30,6 +30,7 @@ from src.endpoints import (
     descuentos,
     detalle_carrito,
     detalle_orden,
+    pagos,
 )
 
 # Importar modelos para que SQLAlchemy los reconozca al crear tablas
@@ -41,6 +42,7 @@ import src.entities.orden  # noqa: F401
 import src.entities.descuento  # noqa: F401
 import src.entities.detalle_carrito  # noqa: F401
 import src.entities.detalle_orden  # noqa: F401
+import src.entities.pago  # noqa: F401
 
 
 @asynccontextmanager
@@ -85,6 +87,7 @@ app.include_router(
 app.include_router(
     detalle_orden.router, prefix="/detalle-orden", tags=["Detalle Orden"]
 )
+app.include_router(pagos.router, prefix="/pagos", tags=["Pagos"])
 app.include_router(login.router, tags=["Autenticación"])
 
 

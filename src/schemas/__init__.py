@@ -28,6 +28,12 @@ from src.schemas.orden_schema import (
     OrdenUpdate,
     OrdenResponse,
 )
+from src.schemas.pago_schema import (
+    PagoBase,
+    PagoCreate,
+    PagoUpdate,
+    PagoResponse,
+)
 from src.schemas.detalle_carrito_schema import (
     DetalleCarritoBase,
     DetalleCarritoCreate,
@@ -76,6 +82,10 @@ __all__ = [
     "DetalleOrdenCreate",
     "DetalleOrdenUpdate",
     "DetalleOrdenResponse",
+    "PagoBase",
+    "PagoCreate",
+    "PagoUpdate",
+    "PagoResponse",
     "CarritoBase",
     "CarritoCreate",
     "CarritoUpdate",
