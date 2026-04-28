@@ -54,7 +54,7 @@ jobs:
           run: |
             python -m pip install --upgrade pip
             pip install -r requirements.txt
-            pip install ruff pip-audit
+            pip install ruff
 
         - name: Crear/actualizar BD (migración)
           run: python migrate_db.py
