@@ -8,6 +8,7 @@ from src.endpoints.detalle_carrito import router as detalle_carrito_router
 from src.endpoints.descuentos import router as descuentos_router
 from src.endpoints.ordenes import router as ordenes_router
 from src.endpoints.detalle_orden import router as detalle_orden_router
+from src.endpoints.pagos import router as pagos_router
 
 __all__ = [
     "usuarios_router",
@@ -18,4 +19,5 @@ __all__ = [
     "descuentos_router",
     "ordenes_router",
     "detalle_orden_router",
+    "pagos_router",
 ]
