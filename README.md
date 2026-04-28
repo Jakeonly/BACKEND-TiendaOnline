@@ -22,7 +22,7 @@ Este proyecto es un sistema de gestión para una tienda en línea desarrollado c
 - **Python-dotenv**: Manejo de variables de entorno para configuración segura.
 
 ### 📂 Entidades del Sistema
-El sistema gestiona integralmente las siguientes 8 entidades:
+El sistema gestiona integralmente las siguientes 9 entidades:
 
 - **Usuarios**: Gestión de clientes y administradores.
 - **Categorías**: Clasificación de productos.
@@ -32,6 +32,7 @@ El sistema gestiona integralmente las siguientes 8 entidades:
 - **Órdenes**: Registro de pedidos realizados.
 - **Detalles de Orden**: Facturación detallada de cada pedido.
 - **Descuentos**: Manejo de códigos promocionales y porcentajes de rebaja.
+- **Pagos**: Registro y gestión de pagos asociados a órdenes (monto, método, estado).
 
 ### 🔧 Instalación y Configuración
 1. **Clonar el repositorio**:
@@ -74,7 +75,39 @@ Resumen de lo que se implementó en este proyecto:
 - **Contraseñas hasheadas con bcrypt**: se reforzó validación para evitar error 500 cuando existe hash inválido en BD.
 - **CORS activo en FastAPI**: configurado en `src/app.py` con orígenes desde `CORS_ORIGINS`, credenciales habilitadas, métodos comunes y cabeceras `Authorization`, `Content-Type`, `Accept`.
 
+### 💳 Módulo de Pagos
+
+El módulo de pagos permite registrar y gestionar pagos asociados a órdenes de compra:
+
+**Endpoints disponibles**:
+- `GET /pagos/` - Listar todos los pagos
+- `GET /pagos/{pago_id}` - Obtener un pago específico
+- `POST /pagos/` - Crear un nuevo pago
+- `PUT /pagos/{pago_id}` - Actualizar un pago existente
+- `DELETE /pagos/{pago_id}` - Eliminar un pago
+
+**Campos principales de un pago**:
+- `id`: UUID único del pago
+- `monto`: Decimal con el monto del pago (>= 0)
+- `metodo`: Método de pago (ej: efectivo, tarjeta, transferencia)
+- `estado`: Estado del pago (por defecto "pendiente", puede ser "pagada", "cancelada", etc.)
+- `orden_id`: UUID de la orden asociada (relación 1:N con Órdenes)
+- `fecha_creacion`: Timestamp de creación
+- `fecha_edicion`: Timestamp de última actualización
+
+**Ejemplo de creación de pago**:
+```json
+POST /pagos/
+{
+  "monto": 159800.00,
+  "metodo": "efectivo",
+  "estado": "pagada",
+  "orden_id": "uuid-de-la-orden"
+}
+```
+
 Variables de entorno relevantes (archivo `.env`):
+
 
 - `JWT_SECRET_KEY`
 - `JWT_ALGORITHM` (por defecto `HS256`)
