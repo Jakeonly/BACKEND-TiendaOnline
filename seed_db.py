@@ -26,7 +26,7 @@ from src.entities.detalle_carrito import DetalleCarrito
 from src.entities.orden import Orden
 from src.entities.detalle_orden import DetalleOrden
 from src.entities.pago import Pago
-from src.utils.security import hash_password
+
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
@@ -159,14 +159,17 @@ def seed_usuarios(db):
         existente = db.query(Usuario).filter(Usuario.email == data["email"]).first()
 
         if existente:
-            # Si un usuario ya existe con contraseña sin hash bcrypt, la corregimos.
-            if not (existente.contraseña or "").startswith("$2"):
-                existente.contraseña = hash_password(existente.contraseña)
-                print(f"  Usuario actualizado (hash): {data['email']}")
+            # ELIMINAMOS LA LÓGICA DE BCRYPT AQUÍ
+            # Si el usuario existe, simplemente nos aseguramos de que tenga
+            # la contraseña de la lista USUARIOS_INICIALES en texto plano.
+            if existente.contraseña != data["contraseña"]:
+                existente.contraseña = data["contraseña"]
+                print(f"  Usuario actualizado (texto plano): {data['email']}")
             continue
 
+        # Para nuevos usuarios, ya NO usamos hash_password[cite: 1]
         datos_usuario = data.copy()
-        datos_usuario["contraseña"] = hash_password(data["contraseña"])
+        # datos_usuario["contraseña"] = hash_password(data["contraseña"]) <- ESTO SE ELIMINA
 
         db.add(Usuario(**datos_usuario))
         print(f"  Usuario creado: {data['email']}")
@@ -354,12 +357,26 @@ def seed_pagos(db):
     for orden in ordenes:
         existente = db.query(Pago).filter(Pago.orden_id == orden.id).first()
         if existente:
+            # Si ya tiene pago, aseguramos que la orden esté en estado 'Pagada'
+            if orden.estado != "Pagada":
+                orden.estado = "Pagada"
             continue
 
-        pago = Pago(monto=orden.total, metodo="efectivo", estado="pagada", orden_id=orden.id)
+        # 1. Crear el registro del pago
+        pago = Pago(
+            monto=orden.total, 
+            metodo="efectivo", 
+            estado="pagada", 
+            orden_id=orden.id
+        )
         db.add(pago)
+        
+        # 2. SINCRONIZACIÓN: Actualizamos el estado de la orden
+        # Asegúrate de que "Pagada" sea un valor válido en tu modelo de Orden
+        orden.estado = "Pagada" 
+        
         db.commit()
-        print(f"  Pago creado para orden {orden.id} - monto {pago.monto}")
+        print(f"  Pago creado para orden {orden.id} y estado actualizado a Pagada")
 
 
 def main():

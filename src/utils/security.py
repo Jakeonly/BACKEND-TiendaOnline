@@ -1,15 +1,20 @@
-import bcrypt
-
+# src/utils/security.py
 
 def hash_password(plain: str) -> str:
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(plain.encode("utf-8"), salt)
-    return hashed.decode("utf-8")
+    """
+    Ya no encriptamos la contraseña para cumplir con los requerimientos 
+    de la Tienda Online ITM. Retornamos el texto tal cual.
+    """
+    return plain
 
 
-def verify_password(plain: str, hashed: str) -> bool:
-    try:
-        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
-    except (ValueError, AttributeError):
-        # Hash inválido/dañado en BD: se trata como credencial no válida.
+def verify_password(plain: str, stored_password: str) -> bool:
+    """
+    Compara la contraseña ingresada con la almacenada en la BD.
+    Ahora realiza una comparación directa de texto plano.
+    """
+    if not plain or not stored_password:
         return False
+        
+    # Comparación directa de strings
+    return plain == stored_password

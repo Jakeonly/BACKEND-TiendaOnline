@@ -1,15 +1,18 @@
 """
-CRUD Usuarios
+CRUD Usuarios - Backend (Tienda Online ITM)
+Este módulo gestiona las operaciones de base de datos para los usuarios.
 """
 
 from src.crud.client import _delete, _get, _post, _put
 
 
 def listar_usuarios() -> list:
+    """Retorna la lista completa de usuarios desde la base de datos."""
     return _get("/usuarios")
 
 
 def obtener_usuario(usuario_id: str) -> dict:
+    """Obtiene un usuario específico por su ID."""
     return _get(f"/usuarios/{usuario_id}")
 
 
@@ -22,10 +25,14 @@ def crear_usuario(
     direccion: str | None = None,
     activo: bool = True,
 ) -> dict:
+    """
+    Crea un usuario nuevo.
+    La contraseña se guarda en texto plano según los requerimientos actuales.
+    """
     payload = {
         "nombre_completo": nombre_completo,
         "email": email,
-        "contraseña": contraseña,
+        "contraseña": contraseña,  # Se envía tal cual llega
         "es_admin": es_admin,
         "telefono": telefono,
         "direccion": direccion,
@@ -44,7 +51,13 @@ def actualizar_usuario(
     direccion: str | None = None,
     activo: bool | None = None,
 ) -> dict:
+    """
+    Actualiza la información de un usuario.
+    Si se envía una nueva contraseña, se actualiza en texto plano[cite: 1].
+    """
     payload = {}
+    
+    # Solo agregamos al payload los campos que no son None para evitar sobrescribir con nulos[cite: 1]
     if nombre_completo is not None:
         payload["nombre_completo"] = nombre_completo
     if email is not None:
@@ -64,4 +77,5 @@ def actualizar_usuario(
 
 
 def eliminar_usuario(usuario_id: str) -> None:
+    """Elimina permanentemente un usuario por su ID[cite: 1]."""
     _delete(f"/usuarios/{usuario_id}")
