@@ -221,19 +221,8 @@ def _iniciar_api():
     # Nota: Asegúrate que tu archivo principal de FastAPI se llame app.py o cambia el nombre aquí
     uvicorn.run("src.app:app", host="0.0.0.0", port=8000, log_level="error")
 
-def main():
-    print("============================================")
-    print("   TIENDA ONLINE API - MENÚ CONSOLA ITM")
-    print("============================================")
-    
-    # Iniciar la API en segundo plano
-    server = threading.Thread(target=_iniciar_api, daemon=True)
-    server.start()
-    
-    print("Esperando a que la API inicie...")
-    time.sleep(2.5)
-    print("API lista en http://localhost:8000\n")
 
+def menu_principal() -> None:
     autenticado = False
 
     while True:
@@ -249,24 +238,61 @@ def main():
         print("0. Salir del Sistema")
         print("====================================")
         print(f"Estado sesión JWT: {'ACTIVA' if autenticado else 'INACTIVA'}")
-        
+
         opcion = input("Seleccione una categoría: ").strip()
-        
+
         if opcion == "0":
             print("Cerrando aplicación. ¡Hasta luego!")
             break
-        elif opcion == "1": autenticado = menu_login()
-        elif opcion == "2": menu_usuarios()
-        elif opcion == "3": menu_categorias()
-        elif opcion == "4": menu_productos()
-        elif opcion == "5": menu_carritos()
-        elif opcion == "6": menu_ordenes()
-        elif opcion == "7": menu_descuentos()
+        elif opcion == "1":
+            autenticado = menu_login()
+        elif opcion == "2":
+            menu_usuarios()
+        elif opcion == "3":
+            menu_categorias()
+        elif opcion == "4":
+            menu_productos()
+        elif opcion == "5":
+            menu_carritos()
+        elif opcion == "6":
+            menu_ordenes()
+        elif opcion == "7":
+            menu_descuentos()
         elif opcion == "8":
             menu_logout()
             autenticado = False
         else:
             print("Opción no válida. Intente de nuevo.")
+
+
+def main():
+    print("============================================")
+    print("   TIENDA ONLINE API - MENÚ CONSOLA ITM")
+    print("============================================")
+
+    opcion_menu = input("¿Requiere menú de consola? (1 = sí, 2 = no): ").strip()
+
+    if opcion_menu == "1":
+        server = threading.Thread(target=_iniciar_api, daemon=True)
+        server.start()
+        print("Esperando a que la API inicie...")
+        time.sleep(2.5)
+        print("API lista en http://localhost:8000\n")
+        menu_principal()
+        return
+
+    if opcion_menu == "2":
+        print("Iniciando solo la API. El menú de consola no se mostrará.")
+        _iniciar_api()
+        return
+
+    print("Opción no válida. Se iniciará el menú de consola por defecto.")
+    server = threading.Thread(target=_iniciar_api, daemon=True)
+    server.start()
+    print("Esperando a que la API inicie...")
+    time.sleep(2.5)
+    print("API lista en http://localhost:8000\n")
+    menu_principal()
 
 if __name__ == "__main__":
     main()
