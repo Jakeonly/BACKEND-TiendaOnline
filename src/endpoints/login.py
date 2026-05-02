@@ -19,15 +19,29 @@ def login(dato: Login, db: Session = Depends(get_db)):
     Endpoint de autenticación.
     Busca al usuario por email y verifica su contraseña hasheada.
     """
-    # 1. Buscamos al usuario por su email
-    user = db.query(Usuario).filter(Usuario.email == dato.email).first()
+    email_normalizado = dato.email.strip().lower()
+    password_ingresada = dato.contraseña
+
+    # 1. Buscamos al usuario por su email (normalizado)
+    user = db.query(Usuario).filter(Usuario.email == email_normalizado).first()
 
     # 2. Si no existe, error 401
     if not user:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
 
-    # 3. Verificamos que la contraseña enviada coincida con el hash de la BD
-    if not verify_password(dato.contraseña, user.contraseña):
+    # 3. Verificamos contraseña (hash actual y fallback legacy)
+    password_ok = verify_password(password_ingresada, user.contraseña)
+
+    if not password_ok and user.contraseña == password_ingresada:
+        # Usuario legacy con contraseña en texto plano: auto-migramos a hash
+        from src.utils.security import hash_password
+
+        user.contraseña = hash_password(password_ingresada)
+        db.commit()
+        db.refresh(user)
+        password_ok = True
+
+    if not password_ok:
         raise HTTPException(
             status_code=401, detail="Contraseña no válida para el usuario"
         )
