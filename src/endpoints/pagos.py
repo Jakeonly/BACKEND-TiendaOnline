@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from src.database.config import get_db
 from src.entities.pago import Pago
+from src.entities.orden import Orden
 from src.schemas.pago_schema import (
     PagoCreate,
     PagoUpdate,
@@ -35,14 +36,27 @@ def obtener_pago(pago_id: UUID, db: Session = Depends(get_db)):
 
 @router.post("/", status_code=201)
 def crear_pago(pago: PagoCreate, db: Session = Depends(get_db)):
-    """Registra un nuevo pago asociado a una orden."""
+    """Registra un nuevo pago y sincroniza el estado de la orden."""
+    # 1. Creamos el registro del pago
     nuevo = Pago(**pago.model_dump())
     db.add(nuevo)
+    
+    # 2. LÓGICA DE SINCRONIZACIÓN
+    # Buscamos la orden asociada a este pago
+    db_orden = db.query(Orden).filter(Orden.id == nuevo.orden_id).first()
+    
+    if db_orden:
+        # Si el estado del pago es 'pagada' (o como lo manejes en tu sistema)
+        # Actualizamos automáticamente el estado de la orden[cite: 1]
+        if nuevo.estado.lower() in ["pagada", "completado"]:
+            db_orden.estado = "Pagada"
+            # Si manejas lógica de 'Cancelado', podrías añadirla aquí también
+    
     db.commit()
     db.refresh(nuevo)
 
     data = PagoResponse.model_validate(nuevo).model_dump(mode="json")
-    return success_response(data=data, message="Pago creado exitosamente")
+    return success_response(data=data, message="Pago registrado y Orden actualizada")
 
 
 @router.put("/{pago_id}")
@@ -74,3 +88,4 @@ def eliminar_pago(pago_id: UUID, db: Session = Depends(get_db)):
     db.commit()
 
     return None
+
