@@ -5,14 +5,16 @@ from pydantic import BaseModel, Field
 
 class CarritoBase(BaseModel):
     usuario_id: UUID = Field(..., description="ID del dueño del carrito")
+    estado: str = Field(default="Pendiente", description="Estado del carrito: Pendiente o Pagado")
 
 
 class CarritoCreate(CarritoBase):
-    pass
+    estado: str = Field(default="Pendiente", description="Estado del carrito: Pendiente o Pagado")
 
 
 class CarritoUpdate(BaseModel):
     usuario_id: UUID | None = None
+    estado: str | None = None
 
 
 class CarritoResponse(CarritoBase):

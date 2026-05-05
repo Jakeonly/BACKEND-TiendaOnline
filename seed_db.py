@@ -26,7 +26,6 @@ from src.entities.detalle_carrito import DetalleCarrito
 from src.entities.orden import Orden
 from src.entities.detalle_orden import DetalleOrden
 from src.entities.pago import Pago
-from src.utils.security import hash_password
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
@@ -159,14 +158,9 @@ def seed_usuarios(db):
         existente = db.query(Usuario).filter(Usuario.email == data["email"]).first()
 
         if existente:
-            # Si un usuario ya existe con contraseña sin hash bcrypt, la corregimos.
-            if not (existente.contraseña or "").startswith("$2"):
-                existente.contraseña = hash_password(existente.contraseña)
-                print(f"  Usuario actualizado (hash): {data['email']}")
             continue
 
         datos_usuario = data.copy()
-        datos_usuario["contraseña"] = hash_password(data["contraseña"])
 
         db.add(Usuario(**datos_usuario))
         print(f"  Usuario creado: {data['email']}")

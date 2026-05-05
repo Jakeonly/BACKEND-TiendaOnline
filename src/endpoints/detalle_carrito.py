@@ -26,6 +26,19 @@ def listar_todos_los_detalles_endpoint(db: Session = Depends(get_db)):
     return success_response(data=data, message="Detalles de carritos obtenidos")
 
 
+@router.get("/carrito/{carrito_id}")
+def obtener_detalles_por_carrito_endpoint(carrito_id: UUID, db: Session = Depends(get_db)):
+    """Obtiene todos los ítems de un carrito específico."""
+    db_detalles = (
+        db.query(DetalleCarrito).filter(DetalleCarrito.carrito_id == carrito_id).all()
+    )
+    data = [
+        DetalleCarritoResponse.model_validate(d).model_dump(mode="json")
+        for d in db_detalles
+    ]
+    return success_response(data=data, message="Detalles del carrito obtenidos")
+
+
 @router.get("/{detalle_id}")
 def obtener_detalle_carrito_endpoint(detalle_id: UUID, db: Session = Depends(get_db)):
     """Busca un ítem de un carrito por su ID."""

@@ -23,10 +23,13 @@ def crear_carrito(
 def actualizar_carrito(
     carrito_id: str,
     usuario_id: str | None = None,
+    estado: str | None = None,
 ) -> dict:
     payload = {}
     if usuario_id is not None:
         payload["usuario_id"] = usuario_id
+    if estado is not None:
+        payload["estado"] = estado
 
     return _put(f"/carritos/{carrito_id}", json=payload)
 

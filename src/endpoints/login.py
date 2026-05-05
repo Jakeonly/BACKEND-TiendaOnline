@@ -7,7 +7,6 @@ from src.core.responses import success_response
 from src.database.config import get_db
 from src.entities.usuario import Usuario
 from src.schemas.login_schema import Login
-from src.utils.security import verify_password
 
 
 router = APIRouter(prefix="/usuarios")
@@ -17,7 +16,7 @@ router = APIRouter(prefix="/usuarios")
 def login(dato: Login, db: Session = Depends(get_db)):
     """
     Endpoint de autenticación.
-    Busca al usuario por email y verifica su contraseña hasheada.
+    Busca al usuario por email y verifica su contraseña en texto plano.
     """
     email_normalizado = dato.email.strip().lower()
     password_ingresada = dato.contraseña
@@ -29,31 +28,14 @@ def login(dato: Login, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
 
-    # 3. Verificamos contraseña (hash actual y fallback legacy)
-    password_ok = verify_password(password_ingresada, user.contraseña)
-
-    if not password_ok and user.contraseña == password_ingresada:
-        # Usuario legacy con contraseña en texto plano: auto-migramos a hash
-        from src.utils.security import hash_password
-
-        user.contraseña = hash_password(password_ingresada)
-        db.commit()
-        db.refresh(user)
-        password_ok = True
-
-    if not password_ok:
+    # 3. Verificamos contraseña (comparación en texto plano)
+    if user.contraseña != password_ingresada:
         raise HTTPException(
             status_code=401, detail="Contraseña no válida para el usuario"
         )
 
     if not user.activo:
         raise HTTPException(status_code=403, detail="Usuario inactivo")
-
-    # 4. Verificamos si es administrador
-    if not user.es_admin:
-        raise HTTPException(
-            status_code=403, detail="Acceso restringido, el usuario no es administrador"
-        )
 
     settings = get_settings()
     access_token = create_access_token(
