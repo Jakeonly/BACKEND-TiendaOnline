@@ -1,6 +1,6 @@
 import uuid
 from src.database.config import Base
-from sqlalchemy import Column, DateTime, ForeignKey
+from sqlalchemy import Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -13,6 +13,7 @@ class Carrito(Base):
     usuario_id = Column(
         UUID(as_uuid=True), ForeignKey("tbl_usuarios.id"), nullable=False
     )
+    estado = Column(String(20), nullable=False, default="Pendiente")
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
     fecha_edicion = Column(DateTime(timezone=True), onupdate=func.now())
 

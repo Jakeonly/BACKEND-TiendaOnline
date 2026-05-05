@@ -9,7 +9,6 @@ from src.entities.usuario import Usuario
 from src.schemas.usuario_schema import UsuarioCreate, UsuarioUpdate, UsuarioResponse
 from src.core.exceptions import NotFoundError, ConflictError
 from src.core.responses import success_response
-from src.utils.security import hash_password
 
 router = APIRouter()
 
@@ -40,11 +39,8 @@ def crear_nuevo_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     if db.query(Usuario).filter(Usuario.email == usuario.email).first():
         raise ConflictError(message="El correo electrónico ya está registrado")
 
-    # Aplicamos el hash de seguridad
-    data_in = usuario.model_dump()
-    data_in["contraseña"] = hash_password(usuario.contraseña)
-
-    nuevo = Usuario(**data_in)
+    # Guardar contraseña en texto plano
+    nuevo = Usuario(**usuario.model_dump())
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
@@ -63,8 +59,6 @@ def actualizar_usuario_data(
         raise NotFoundError(message="No se pudo actualizar: Usuario no encontrado")
 
     update_data = usuario.model_dump(exclude_unset=True)
-    if "contraseña" in update_data and update_data["contraseña"]:
-        update_data["contraseña"] = hash_password(update_data["contraseña"])
 
     for field, value in update_data.items():
         setattr(db_usuario, field, value)

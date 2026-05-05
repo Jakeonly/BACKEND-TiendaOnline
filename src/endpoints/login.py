@@ -36,19 +36,8 @@ def login(dato: Login, db: Session = Depends(get_db)) -> Any:
             detail="Credenciales incorrectas: Usuario no encontrado"
         )
 
-    # 3. Verificamos contraseña (hash actual y fallback legacy)
-    password_ok = verify_password(password_ingresada, user.contraseña)
-
-    if not password_ok and user.contraseña == password_ingresada:
-        # Usuario legacy con contraseña en texto plano: auto-migramos a hash
-        from src.utils.security import hash_password
-
-        user.contraseña = hash_password(password_ingresada)
-        db.commit()
-        db.refresh(user)
-        password_ok = True
-
-    if not password_ok:
+    # 3. Verificamos contraseña (comparación en texto plano)
+    if user.contraseña != password_ingresada:
         raise HTTPException(
             status_code=401, 
             detail="Credenciales incorrectas: Contraseña no válida"
