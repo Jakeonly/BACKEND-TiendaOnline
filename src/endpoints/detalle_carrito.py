@@ -29,7 +29,9 @@ def listar_todos_los_detalles_endpoint(db: Session = Depends(get_db)):
 
 
 @router.get("/carrito/{carrito_id}")
-def obtener_detalles_por_carrito_endpoint(carrito_id: UUID, db: Session = Depends(get_db)):
+def obtener_detalles_por_carrito_endpoint(
+    carrito_id: UUID, db: Session = Depends(get_db)
+):
     """Obtiene todos los ítems de un carrito específico."""
     db_detalles = (
         db.query(DetalleCarrito).filter(DetalleCarrito.carrito_id == carrito_id).all()

@@ -57,7 +57,7 @@ def actualizar_usuario(
     Si se envía una nueva contraseña, se guarda como hash.
     """
     payload = {}
-    
+
     # Solo agregamos al payload los campos que no son None para evitar sobrescribir con nulos[cite: 1]
     if nombre_completo is not None:
         payload["nombre_completo"] = nombre_completo

@@ -50,18 +50,18 @@ def crear_pago(pago: PagoCreate, db: Session = Depends(get_db)):
     # 1. Creamos el registro del pago
     nuevo = Pago(**pago.model_dump())
     db.add(nuevo)
-    
+
     # 2. LÓGICA DE SINCRONIZACIÓN
     # Buscamos la orden asociada a este pago
     db_orden = db.query(Orden).filter(Orden.id == nuevo.orden_id).first()
-    
+
     if db_orden:
         # Si el estado del pago es 'pagada' (o como lo manejes en tu sistema)
         # Actualizamos automáticamente el estado de la orden[cite: 1]
         if nuevo.estado.lower() in ["pagada", "completado"]:
             db_orden.estado = "Pagada"
             # Si manejas lógica de 'Cancelado', podrías añadirla aquí también
-    
+
     db.commit()
     db.refresh(nuevo)
 
@@ -110,4 +110,3 @@ def eliminar_pago(pago_id: UUID, db: Session = Depends(get_db)):
     db.commit()
 
     return None
-

@@ -85,9 +85,7 @@ def crear_nueva_orden_compra(orden: OrdenCreate, db: Session = Depends(get_db)):
 
     if payload.get("descuento_id") is not None:
         db_descuento = (
-            db.query(Descuento)
-            .filter(Descuento.id == payload["descuento_id"])
-            .first()
+            db.query(Descuento).filter(Descuento.id == payload["descuento_id"]).first()
         )
         if not db_descuento:
             raise NotFoundError(message="El cupón seleccionado no existe")
