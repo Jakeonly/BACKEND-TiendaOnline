@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 class PagoBase(BaseModel):
     monto: Decimal = Field(..., ge=0, description="Monto del pago")
     metodo: str = Field(..., max_length=50, description="Método de pago")
-    estado: str = Field(default="pendiente", max_length=20)
+    estado: str = Field(default="Pendiente", max_length=20)
     orden_id: UUID = Field(..., description="ID de la orden asociada")
 
 

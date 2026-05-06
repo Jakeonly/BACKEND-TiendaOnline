@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Any
 
 from src.core.auth import create_access_token
 from src.core.config import get_settings
-from src.core.responses import success_response
+from src.core.responses import error_response, success_response
 from src.database.config import get_db
 from src.entities.usuario import Usuario
 from src.schemas.login_schema import Login
+from src.utils.security import verify_password
 
 
 router = APIRouter(prefix="/usuarios")
@@ -31,23 +33,34 @@ def login(dato: Login, db: Session = Depends(get_db)) -> Any:
 
     # 2. Si no existe, error 401 (Unauthorized)
     if not user:
-        raise HTTPException(
-            status_code=401, 
-            detail="Credenciales incorrectas: Usuario no encontrado"
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content=error_response(
+                code="LOGIN_INVALID_CREDENTIALS",
+                message="Credenciales incorrectas",
+                details={"reason": "Usuario no encontrado"},
+            ),
         )
 
-    # 3. Verificamos contraseña (comparación en texto plano)
-    if user.contraseña != password_ingresada:
-        raise HTTPException(
-            status_code=401, 
-            detail="Credenciales incorrectas: Contraseña no válida"
+    # 3. Verificamos contraseña aceptando texto plano y hashes bcrypt heredados
+    if not verify_password(password_ingresada, user.contraseña):
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content=error_response(
+                code="LOGIN_INVALID_CREDENTIALS",
+                message="Credenciales incorrectas",
+                details={"reason": "Contraseña no válida"},
+            ),
         )
 
     # 4. Verificación de estado del usuario
     if not user.activo:
-        raise HTTPException(
-            status_code=403, 
-            detail="Esta cuenta se encuentra desactivada. Contacte al soporte."
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content=error_response(
+                code="LOGIN_DISABLED_ACCOUNT",
+                message="Esta cuenta se encuentra desactivada. Contacte al soporte.",
+            ),
         )
 
     # 5. Configuración y generación del Token de Acceso

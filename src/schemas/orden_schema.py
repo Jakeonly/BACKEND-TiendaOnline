@@ -7,11 +7,12 @@ from pydantic import BaseModel, Field
 class OrdenBase(BaseModel):
     total: Decimal = Field(..., ge=0, description="Monto total de la factura")
     estado: str = Field(
-        default="pendiente",
+        default="Pendiente",
         max_length=15,
-        description="Estado: pendiente, pagada, cancelada",
+        description="Estado: Pendiente, Pagada, Cancelada",
     )
     usuario_id: UUID = Field(..., description="ID del cliente")
+    carrito_id: UUID | None = Field(None, description="ID del carrito asociado si existe")
     descuento_id: UUID | None = Field(
         None, description="ID del descuento aplicado si existe"
     )

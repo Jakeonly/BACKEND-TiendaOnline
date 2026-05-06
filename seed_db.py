@@ -26,6 +26,8 @@ from src.entities.detalle_carrito import DetalleCarrito
 from src.entities.orden import Orden
 from src.entities.detalle_orden import DetalleOrden
 from src.entities.pago import Pago
+# removed hashing: seeder will insert plain-text passwords
+# from src.utils.security import hash_password
 
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
@@ -159,17 +161,13 @@ def seed_usuarios(db):
         existente = db.query(Usuario).filter(Usuario.email == data["email"]).first()
 
         if existente:
-            # ELIMINAMOS LA LÓGICA DE BCRYPT AQUÍ
-            # Si el usuario existe, simplemente nos aseguramos de que tenga
-            # la contraseña de la lista USUARIOS_INICIALES en texto plano.
             if existente.contraseña != data["contraseña"]:
                 existente.contraseña = data["contraseña"]
-                print(f"  Usuario actualizado (texto plano): {data['email']}")
+                print(f"  Usuario actualizado: {data['email']}")
             continue
 
-        # Para nuevos usuarios, ya NO usamos hash_password[cite: 1]
         datos_usuario = data.copy()
-        # datos_usuario["contraseña"] = hash_password(data["contraseña"]) <- ESTO SE ELIMINA
+        datos_usuario["contraseña"] = data["contraseña"]
 
         db.add(Usuario(**datos_usuario))
         print(f"  Usuario creado: {data['email']}")
@@ -309,32 +307,49 @@ def seed_ordenes(db):
         if not detalles_carrito:
             continue
 
+        # Calcular total bruto del carrito
         total = Decimal("0.00")
         for d in detalles_carrito:
             total += d.cantidad * d.precio_unitario
 
         aplicado_descuento = False
+        total_final = total
         if descuento:
+            # Aplicar descuento solo si no hay otra orden con ese descuento para evitar duplicados
             existe_con_desc = db.query(Orden).filter(Orden.descuento_id == descuento_id).first()
             if not existe_con_desc:
                 aplicado_descuento = True
                 if descuento.porcentaje is not None:
-                    total = total * (Decimal("1.00") - descuento.porcentaje / Decimal("100"))
+                    total_final = total * (Decimal("1.00") - descuento.porcentaje / Decimal("100"))
                 elif descuento.monto_fijo is not None:
-                    total = total - descuento.monto_fijo
-                    if total < Decimal("0.00"):
-                        total = Decimal("0.00")
+                    total_final = total - descuento.monto_fijo
+                    if total_final < Decimal("0.00"):
+                        total_final = Decimal("0.00")
 
-        orden_existente = db.query(Orden).filter(Orden.usuario_id == cliente.id, Orden.total == total).first()
+        # Evitar crear múltiples órdenes para el mismo carrito
+        orden_existente = db.query(Orden).filter(Orden.carrito_id == carrito.id).first()
         if orden_existente:
+            # Si ya existe, actualizamos su total y descuento si hace falta
+            changed = False
+            if orden_existente.total != total_final:
+                orden_existente.total = total_final
+                changed = True
+            if aplicado_descuento and orden_existente.descuento_id != descuento_id:
+                orden_existente.descuento_id = descuento_id
+                changed = True
+            if changed:
+                db.commit()
+                db.refresh(orden_existente)
+                print(f"  Orden existente actualizada: {orden_existente.id} (carrito={carrito.id}) - total {orden_existente.total}")
             continue
 
-        orden = Orden(total=total, usuario_id=cliente.id, descuento_id=descuento_id if aplicado_descuento else None)
+        orden = Orden(total=total_final, usuario_id=cliente.id, descuento_id=descuento_id if aplicado_descuento else None, carrito_id=carrito.id)
         db.add(orden)
         db.commit()
         db.refresh(orden)
-        print(f"  Orden creada: {orden.id} para {cliente.email} - total {orden.total}")
+        print(f"  Orden creada: {orden.id} para {cliente.email} - total {orden.total} (carrito={carrito.id})")
 
+        # Crear detalles de orden solo al crear la orden por primera vez
         for d in detalles_carrito:
             subtotal = d.cantidad * d.precio_unitario
             det = DetalleOrden(
@@ -360,23 +375,33 @@ def seed_pagos(db):
             # Si ya tiene pago, aseguramos que la orden esté en estado 'Pagada'
             if orden.estado != "Pagada":
                 orden.estado = "Pagada"
+                # Marcar carrito relacionado como pagado si existe
+                if getattr(orden, 'carrito_id', None):
+                    carrito = db.query(Carrito).filter(Carrito.id == orden.carrito_id).first()
+                    if carrito and carrito.estado != 'Pagado':
+                        carrito.estado = 'Pagado'
+            db.commit()
             continue
-
         # 1. Crear el registro del pago
         pago = Pago(
-            monto=orden.total, 
-            metodo="efectivo", 
-            estado="pagada", 
-            orden_id=orden.id
+            monto=orden.total,
+            metodo="Efectivo",
+            estado="Pagada",
+            orden_id=orden.id,
         )
         db.add(pago)
-        
+
         # 2. SINCRONIZACIÓN: Actualizamos el estado de la orden
-        # Asegúrate de que "Pagada" sea un valor válido en tu modelo de Orden
-        orden.estado = "Pagada" 
-        
+        orden.estado = "Pagada"
+
+        # 3. Si la orden pertenece a un carrito, marcar el carrito como pagado
+        if getattr(orden, 'carrito_id', None):
+            carrito = db.query(Carrito).filter(Carrito.id == orden.carrito_id).first()
+            if carrito and carrito.estado != 'Pagado':
+                carrito.estado = 'Pagado'
+
         db.commit()
-        print(f"  Pago creado para orden {orden.id} y estado actualizado a Pagada")
+        print(f"  Pago creado para orden {orden.id} y estado actualizado a Pagada (carrito={orden.carrito_id})")
 
 
 def main():

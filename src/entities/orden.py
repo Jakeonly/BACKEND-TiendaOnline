@@ -11,12 +11,15 @@ class Orden(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     total = Column(Numeric(10, 2), nullable=False)
-    estado = Column(String(15), default="pendiente")
+    estado = Column(String(15), default="Pendiente")
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
     fecha_edicion = Column(DateTime(timezone=True), onupdate=func.now())
 
     usuario_id = Column(
         UUID(as_uuid=True), ForeignKey("tbl_usuarios.id"), nullable=False
+    )
+    carrito_id = Column(
+        UUID(as_uuid=True), ForeignKey("tbl_carritos.id"), nullable=True
     )
     descuento_id = Column(
         UUID(as_uuid=True), ForeignKey("tbl_descuentos.id"), nullable=True
@@ -26,3 +29,4 @@ class Orden(Base):
     descuento = relationship("Descuento", back_populates="ordenes")
     detalles = relationship("DetalleOrden", back_populates="orden")
     pagos = relationship("Pago", back_populates="orden")
+    carrito = relationship("Carrito")
