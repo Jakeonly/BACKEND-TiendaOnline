@@ -24,19 +24,19 @@ def listar_carritos_endpoint(db: Session = Depends(get_db)) -> Any:
     # Serialización manual segura para asegurar un JSON limpio
     data = []
     for c in db_carritos:
-        data.append(
-            {
-                "id": str(c.id),
-                "usuario_id": str(c.usuario_id),
-                "usuario_email": c.usuario.email if c.usuario else "Sin asignar",
-                "fecha_creacion": c.fecha_creacion.isoformat()
-                if c.fecha_creacion
-                else None,
-            }
-        )
-
-    return success_response(data=data, message=f"Se encontraron {len(data)} carritos")
-
+        data.append({
+            "id": str(c.id),
+            "usuario_id": str(c.usuario_id),
+            "estado": c.estado,
+            "usuario_email": c.usuario.email if c.usuario else "Sin asignar",
+            "fecha_creacion": c.fecha_creacion.isoformat() if c.fecha_creacion else None,
+            "fecha_edicion": c.fecha_edicion.isoformat() if c.fecha_edicion else None,
+        })
+        
+    return success_response(
+        data=data, 
+        message=f"Se encontraron {len(data)} carritos"
+    )
 
 @router.get("/{carrito_id}")
 def obtener_carrito_endpoint(carrito_id: UUID, db: Session = Depends(get_db)):
