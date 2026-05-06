@@ -1,8 +1,9 @@
 # src/utils/security.py
 
+
 def hash_password(plain: str) -> str:
     """
-    Ya no encriptamos la contraseña para cumplir con los requerimientos 
+    Ya no encriptamos la contraseña para cumplir con los requerimientos
     de la Tienda Online ITM. Retornamos el texto tal cual.
     """
     return plain
@@ -15,6 +16,6 @@ def verify_password(plain: str, stored_password: str) -> bool:
     """
     if not plain or not stored_password:
         return False
-        
+
     # Comparación directa de strings
     return plain == stored_password
