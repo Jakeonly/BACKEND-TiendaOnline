@@ -12,11 +12,12 @@ from src.schemas.login_schema import Login
 
 router = APIRouter(prefix="/usuarios")
 
+
 @router.post("/login")
 def login(dato: Login, db: Session = Depends(get_db)) -> Any:
     """
     Endpoint de autenticación Full para la Tienda Online ITM.
-    
+
     Lógica implementada:
     1. Acceso universal (Admin y Clientes).
     2. Validación de contraseña en texto plano.
@@ -32,27 +33,25 @@ def login(dato: Login, db: Session = Depends(get_db)) -> Any:
     # 2. Si no existe, error 401 (Unauthorized)
     if not user:
         raise HTTPException(
-            status_code=401, 
-            detail="Credenciales incorrectas: Usuario no encontrado"
+            status_code=401, detail="Credenciales incorrectas: Usuario no encontrado"
         )
 
     # 3. Verificamos contraseña (comparación en texto plano)
     if user.contraseña != password_ingresada:
         raise HTTPException(
-            status_code=401, 
-            detail="Credenciales incorrectas: Contraseña no válida"
+            status_code=401, detail="Credenciales incorrectas: Contraseña no válida"
         )
 
     # 4. Verificación de estado del usuario
     if not user.activo:
         raise HTTPException(
-            status_code=403, 
-            detail="Esta cuenta se encuentra desactivada. Contacte al soporte."
+            status_code=403,
+            detail="Esta cuenta se encuentra desactivada. Contacte al soporte.",
         )
 
     # 5. Configuración y generación del Token de Acceso
     settings = get_settings()
-    
+
     access_token = create_access_token(
         subject=str(user.id),
         email=user.email,
@@ -69,10 +68,12 @@ def login(dato: Login, db: Session = Depends(get_db)) -> Any:
             "user": {
                 "id": str(user.id),
                 "email": user.email,
-                "nombre": f"{user.nombre} {user.apellido}" if hasattr(user, 'nombre') else user.email,
+                "nombre": f"{user.nombre} {user.apellido}"
+                if hasattr(user, "nombre")
+                else user.email,
                 "es_admin": user.es_admin,
-                "rol": "Administrador" if user.es_admin else "Cliente"
-            }
+                "rol": "Administrador" if user.es_admin else "Cliente",
+            },
         },
-        message=f"¡Bienvenido {user.email}! Inicio de sesión correcto."
+        message=f"¡Bienvenido {user.email}! Inicio de sesión correcto.",
     )
