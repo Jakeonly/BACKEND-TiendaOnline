@@ -26,8 +26,10 @@ def listar_carritos_endpoint(db: Session = Depends(get_db)) -> Any:
         data.append({
             "id": str(c.id),
             "usuario_id": str(c.usuario_id),
+            "estado": c.estado,
             "usuario_email": c.usuario.email if c.usuario else "Sin asignar",
-            "fecha_creacion": c.fecha_creacion.isoformat() if c.fecha_creacion else None
+            "fecha_creacion": c.fecha_creacion.isoformat() if c.fecha_creacion else None,
+            "fecha_edicion": c.fecha_edicion.isoformat() if c.fecha_edicion else None,
         })
         
     return success_response(
