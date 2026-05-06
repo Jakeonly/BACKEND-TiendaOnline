@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.database.config import get_db
+from src.entities.carrito import Carrito
 from src.entities.pago import Pago
 from src.entities.orden import Orden
 from src.schemas.pago_schema import (
@@ -14,6 +15,15 @@ from src.core.exceptions import NotFoundError
 from src.core.responses import success_response
 
 router = APIRouter()
+
+
+def _marcar_carrito_pagado(db: Session, orden: Orden) -> None:
+    if orden.carrito_id is None or orden.estado != "Pagada":
+        return
+
+    carrito = db.query(Carrito).filter(Carrito.id == orden.carrito_id).first()
+    if carrito and carrito.estado != "Pagado":
+        carrito.estado = "Pagado"
 
 
 @router.get("/")
@@ -55,6 +65,10 @@ def crear_pago(pago: PagoCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo)
 
+    if db_orden and db_orden.estado == "Pagada":
+        _marcar_carrito_pagado(db, db_orden)
+        db.commit()
+
     data = PagoResponse.model_validate(nuevo).model_dump(mode="json")
     return success_response(data=data, message="Pago registrado y Orden actualizada")
 
@@ -70,8 +84,16 @@ def actualizar_pago(pago_id: UUID, pago: PagoUpdate, db: Session = Depends(get_d
     for field, value in update_data.items():
         setattr(db_pago, field, value)
 
+    db_orden = db.query(Orden).filter(Orden.id == db_pago.orden_id).first()
+    if db_orden and db_pago.estado and db_pago.estado.lower() in ["pagada", "completado"]:
+        db_orden.estado = "Pagada"
+
     db.commit()
     db.refresh(db_pago)
+
+    if db_orden and db_orden.estado == "Pagada":
+        _marcar_carrito_pagado(db, db_orden)
+        db.commit()
 
     data = PagoResponse.model_validate(db_pago).model_dump(mode="json")
     return success_response(data=data, message="Pago actualizado")

@@ -8,8 +8,10 @@ from src.schemas.detalle_carrito_schema import (
     DetalleCarritoUpdate,
     DetalleCarritoResponse,
 )
+from src.entities.producto import Producto
 from src.entities.detalle_carrito import DetalleCarrito
 from src.core.exceptions import NotFoundError
+from src.core.exceptions import InsufficientStockError
 from src.core.responses import success_response
 
 router = APIRouter()
@@ -56,6 +58,16 @@ def agregar_producto_al_carrito_endpoint(
     detalle: DetalleCarritoCreate, db: Session = Depends(get_db)
 ):
     """Añade un producto al carrito."""
+    db_producto = db.query(Producto).filter(Producto.id == detalle.producto_id).first()
+    if not db_producto:
+        raise NotFoundError(message=f"Producto con ID {detalle.producto_id} no existe")
+
+    if int(db_producto.stock or 0) < int(detalle.cantidad):
+        raise InsufficientStockError(
+            message=f"El producto {db_producto.nombre} no tiene stock suficiente"
+        )
+
+    db_producto.stock = int(db_producto.stock or 0) - int(detalle.cantidad)
     nuevo_detalle = DetalleCarrito(**detalle.model_dump())
     db.add(nuevo_detalle)
     db.commit()
@@ -76,7 +88,43 @@ def actualizar_cantidad_en_carrito_endpoint(
     if not db_detalle:
         raise NotFoundError(message="No se pudo actualizar: Detalle no encontrado")
 
-    for field, value in detalle.model_dump(exclude_unset=True).items():
+    producto_anterior = (
+        db.query(Producto).filter(Producto.id == db_detalle.producto_id).first()
+    )
+    if not producto_anterior:
+        raise NotFoundError(
+            message=f"Producto con ID {db_detalle.producto_id} no existe"
+        )
+
+    update_data = detalle.model_dump(exclude_unset=True)
+    nuevo_producto_id = update_data.get("producto_id", db_detalle.producto_id)
+    nueva_cantidad = int(update_data.get("cantidad", db_detalle.cantidad))
+
+    if nuevo_producto_id == db_detalle.producto_id:
+        diferencia = nueva_cantidad - int(db_detalle.cantidad)
+        if diferencia > 0:
+            if int(producto_anterior.stock or 0) < diferencia:
+                raise InsufficientStockError(
+                    message=f"El producto {producto_anterior.nombre} no tiene stock suficiente"
+                )
+            producto_anterior.stock = int(producto_anterior.stock or 0) - diferencia
+        elif diferencia < 0:
+            producto_anterior.stock = int(producto_anterior.stock or 0) + abs(diferencia)
+    else:
+        producto_anterior.stock = int(producto_anterior.stock or 0) + int(db_detalle.cantidad)
+
+        producto_nuevo = db.query(Producto).filter(Producto.id == nuevo_producto_id).first()
+        if not producto_nuevo:
+                        raise NotFoundError(message=f"Producto con ID {nuevo_producto_id} no existe")
+
+        if int(producto_nuevo.stock or 0) < nueva_cantidad:
+            raise InsufficientStockError(
+                message=f"El producto {producto_nuevo.nombre} no tiene stock suficiente"
+            )
+
+        producto_nuevo.stock = int(producto_nuevo.stock or 0) - nueva_cantidad
+
+    for field, value in update_data.items():
         setattr(db_detalle, field, value)
 
     db.commit()
@@ -96,6 +144,14 @@ def quitar_producto_del_carrito_endpoint(
     )
     if not db_detalle:
         raise NotFoundError(message="No se pudo eliminar: Detalle no encontrado")
+
+    db_producto = db.query(Producto).filter(Producto.id == db_detalle.producto_id).first()
+    if not db_producto:
+        raise NotFoundError(
+            message=f"Producto con ID {db_detalle.producto_id} no existe"
+        )
+
+    db_producto.stock = int(db_producto.stock or 0) + int(db_detalle.cantidad)
 
     db.delete(db_detalle)
     db.commit()

@@ -5,6 +5,7 @@ from typing import Any
 
 from src.database.config import get_db
 from src.entities.carrito import Carrito
+from src.entities.producto import Producto
 from src.schemas.carrito_schema import CarritoCreate, CarritoUpdate, CarritoResponse
 from src.core.exceptions import NotFoundError
 from src.core.responses import success_response
@@ -87,10 +88,20 @@ def actualizar_carrito_endpoint(
 @router.delete("/{carrito_id}", status_code=204)
 def eliminar_carrito_endpoint(carrito_id: UUID, db: Session = Depends(get_db)):
     """Elimina un carrito y sus dependencias si tiene cascade configurado."""
-    db_carrito = db.query(Carrito).filter(Carrito.id == carrito_id).first()
+    db_carrito = (
+        db.query(Carrito)
+        .options(joinedload(Carrito.detalles))
+        .filter(Carrito.id == carrito_id)
+        .first()
+    )
     
     if not db_carrito:
         raise NotFoundError(message="No se pudo eliminar: Carrito no encontrado")
+
+    for detalle in db_carrito.detalles:
+        db_producto = db.query(Producto).filter(Producto.id == detalle.producto_id).first()
+        if db_producto:
+            db_producto.stock = int(db_producto.stock or 0) + int(detalle.cantidad)
 
     db.delete(db_carrito)
     db.commit()
