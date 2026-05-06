@@ -4,6 +4,7 @@ Este módulo gestiona las operaciones de base de datos para los usuarios.
 """
 
 from src.crud.client import _delete, _get, _post, _put
+from src.utils.security import hash_password
 
 
 def listar_usuarios() -> list:
@@ -27,12 +28,12 @@ def crear_usuario(
 ) -> dict:
     """
     Crea un usuario nuevo.
-    La contraseña se guarda en texto plano según los requerimientos actuales.
+    La contraseña se guarda como hash para evitar depender de texto plano.
     """
     payload = {
         "nombre_completo": nombre_completo,
         "email": email,
-        "contraseña": contraseña,  # Se envía tal cual llega
+        "contraseña": hash_password(contraseña),
         "es_admin": es_admin,
         "telefono": telefono,
         "direccion": direccion,
@@ -53,7 +54,7 @@ def actualizar_usuario(
 ) -> dict:
     """
     Actualiza la información de un usuario.
-    Si se envía una nueva contraseña, se actualiza en texto plano[cite: 1].
+    Si se envía una nueva contraseña, se guarda como hash.
     """
     payload = {}
 
@@ -63,7 +64,7 @@ def actualizar_usuario(
     if email is not None:
         payload["email"] = email
     if contraseña is not None:
-        payload["contraseña"] = contraseña
+        payload["contraseña"] = hash_password(contraseña)
     if es_admin is not None:
         payload["es_admin"] = es_admin
     if telefono is not None:

@@ -6,8 +6,11 @@ from sqlalchemy.orm import Session
 
 from src.database.config import get_db
 from src.core.exceptions import NotFoundError, BadRequestError
+from src.entities.carrito import Carrito
 from src.entities.descuento import Descuento
+from src.entities.detalle_orden import DetalleOrden
 from src.entities.orden import Orden
+from src.entities.pago import Pago
 from src.schemas.orden_schema import OrdenCreate, OrdenUpdate, OrdenResponse
 from src.core.responses import success_response
 
@@ -48,6 +51,15 @@ def _aplicar_descuento(total: Decimal, descuento: Descuento) -> Decimal:
     return total_final.quantize(Decimal("0.01"))
 
 
+def _marcar_carrito_pagado(db: Session, orden: Orden) -> None:
+    if orden.estado != "Pagada" or orden.carrito_id is None:
+        return
+
+    carrito = db.query(Carrito).filter(Carrito.id == orden.carrito_id).first()
+    if carrito and carrito.estado != "Pagado":
+        carrito.estado = "Pagado"
+
+
 @router.get("/")
 def listar_todas_las_ordenes_endpoint(db: Session = Depends(get_db)):
     """Obtiene el historial de todas las órdenes de compra."""
@@ -85,6 +97,9 @@ def crear_nueva_orden_compra(orden: OrdenCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nueva_orden)
 
+    _marcar_carrito_pagado(db, nueva_orden)
+    db.commit()
+
     data = OrdenResponse.model_validate(nueva_orden).model_dump(mode="json")
     return success_response(data=data, message="Orden de compra creada exitosamente")
 
@@ -118,6 +133,9 @@ def actualizar_estado_orden_data(
     db.commit()
     db.refresh(db_orden)
 
+    _marcar_carrito_pagado(db, db_orden)
+    db.commit()
+
     data = OrdenResponse.model_validate(db_orden).model_dump(mode="json")
     return success_response(data=data, message="Orden actualizada correctamente")
 
@@ -129,6 +147,8 @@ def cancelar_eliminar_orden_data(orden_id: UUID, db: Session = Depends(get_db)):
     if not db_orden:
         raise NotFoundError(message="No se pudo eliminar: Orden no encontrada")
 
+    db.query(Pago).filter(Pago.orden_id == orden_id).delete(synchronize_session=False)
+    db.query(DetalleOrden).filter(DetalleOrden.orden_id == orden_id).delete(synchronize_session=False)
     db.delete(db_orden)
     db.commit()
 

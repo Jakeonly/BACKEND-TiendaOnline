@@ -54,15 +54,15 @@ def applied_migrations(conn):
 def run_sql_file(conn, path: Path) -> None:
     """Ejecuta un archivo .sql (sentencias separadas por ;)."""
     sql = path.read_text(encoding="utf-8")
-    # Sentencias no vacías y sin comentarios puros
-    statements = [
-        s.strip()
-        for s in sql.split(";")
-        if s.strip() and not s.strip().startswith("--")
-    ]
+
+    # Eliminar líneas que son solo comentarios (líneas que empiezan con --)
+    lines = [line for line in sql.splitlines() if not line.strip().startswith("--")]
+    clean_sql = "\n".join(lines)
+
+    # Separar por ; para obtener sentencias y ejecutar cada una
+    statements = [s.strip() for s in clean_sql.split(";") if s.strip()]
     for stmt in statements:
-        if stmt:
-            conn.execute(text(stmt))
+        conn.execute(text(stmt))
     conn.commit()
 
 

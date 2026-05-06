@@ -89,8 +89,8 @@ El módulo de pagos permite registrar y gestionar pagos asociados a órdenes de 
 **Campos principales de un pago**:
 - `id`: UUID único del pago
 - `monto`: Decimal con el monto del pago (>= 0)
-- `metodo`: Método de pago (ej: efectivo, tarjeta, transferencia)
-- `estado`: Estado del pago (por defecto "pendiente", puede ser "pagada", "cancelada", etc.)
+- `metodo`: Método de pago (ej: Efectivo, Tarjeta, Transferencia)
+- `estado`: Estado del pago (por defecto "Pendiente", puede ser "Pagada", "Cancelada", etc.)
 - `orden_id`: UUID de la orden asociada (relación 1:N con Órdenes)
 - `fecha_creacion`: Timestamp de creación
 - `fecha_edicion`: Timestamp de última actualización
@@ -100,8 +100,8 @@ El módulo de pagos permite registrar y gestionar pagos asociados a órdenes de 
 POST /pagos/
 {
   "monto": 159800.00,
-  "metodo": "efectivo",
-  "estado": "pagada",
+   "metodo": "Efectivo",
+   "estado": "Pagada",
   "orden_id": "uuid-de-la-orden"
 }
 ```

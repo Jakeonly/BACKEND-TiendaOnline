@@ -154,7 +154,7 @@ def menu_ordenes():
             elif op == "2":
                 tot = float(input("Total: ") or 0)
                 uid = input("ID Usuario: ").strip()
-                est = input("Estado: ").strip() or "pendiente"
+                est = input("Estado: ").strip() or "Pendiente"
                 crear_orden(total=tot, usuario_id=uid, estado=est)
                 print("  Orden creada.")
             elif op == "3":

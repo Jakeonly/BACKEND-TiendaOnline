@@ -16,7 +16,7 @@ def obtener_orden(orden_id: str) -> dict:
 def crear_orden(
     total: float,
     usuario_id: str,
-    estado: str = "pendiente",
+    estado: str = "Pendiente",
     descuento_id: str | None = None,
 ) -> dict:
     payload = {
