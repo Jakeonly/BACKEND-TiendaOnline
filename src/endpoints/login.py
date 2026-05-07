@@ -14,11 +14,12 @@ from src.utils.security import verify_password
 
 router = APIRouter(prefix="/usuarios")
 
+
 @router.post("/login")
 def login(dato: Login, db: Session = Depends(get_db)) -> Any:
     """
     Endpoint de autenticación Full para la Tienda Online ITM.
-    
+
     Lógica implementada:
     1. Acceso universal (Admin y Clientes).
     2. Validación de contraseña en texto plano.
@@ -65,7 +66,7 @@ def login(dato: Login, db: Session = Depends(get_db)) -> Any:
 
     # 5. Configuración y generación del Token de Acceso
     settings = get_settings()
-    
+
     access_token = create_access_token(
         subject=str(user.id),
         email=user.email,
@@ -82,10 +83,12 @@ def login(dato: Login, db: Session = Depends(get_db)) -> Any:
             "user": {
                 "id": str(user.id),
                 "email": user.email,
-                "nombre": f"{user.nombre} {user.apellido}" if hasattr(user, 'nombre') else user.email,
+                "nombre": f"{user.nombre} {user.apellido}"
+                if hasattr(user, "nombre")
+                else user.email,
                 "es_admin": user.es_admin,
-                "rol": "Administrador" if user.es_admin else "Cliente"
-            }
+                "rol": "Administrador" if user.es_admin else "Cliente",
+            },
         },
-        message=f"¡Bienvenido {user.email}! Inicio de sesión correcto."
+        message=f"¡Bienvenido {user.email}! Inicio de sesión correcto.",
     )
