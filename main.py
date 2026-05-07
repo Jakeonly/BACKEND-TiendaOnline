@@ -266,6 +266,13 @@ def menu_principal() -> None:
 
 
 def main():
+    print("Esperando a que la API inicie...")
+    time.sleep(2.5)
+    print("API lista en http://localhost:8000\n")
+    _iniciar_api()
+    return
+
+    """
     print("============================================")
     print("   TIENDA ONLINE API - MENÚ CONSOLA ITM")
     print("============================================")
@@ -280,19 +287,17 @@ def main():
         print("API lista en http://localhost:8000\n")
         menu_principal()
         return
-
     if opcion_menu == "2":
         print("Iniciando solo la API. El menú de consola no se mostrará.")
         _iniciar_api()
         return
-
     print("Opción no válida. Se iniciará el menú de consola por defecto.")
     server = threading.Thread(target=_iniciar_api, daemon=True)
     server.start()
     print("Esperando a que la API inicie...")
     time.sleep(2.5)
     print("API lista en http://localhost:8000\n")
-    menu_principal()
+    """
 
 if __name__ == "__main__":
     main()
