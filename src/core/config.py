@@ -40,6 +40,11 @@ class Settings(BaseSettings):
         ),
         validation_alias="CORS_ORIGINS",
     )
+    frontend_url: str = Field(
+        default="",
+        description="Origen público del frontend desplegado; útil en Render.",
+        validation_alias="FRONTEND_URL",
+    )
 
     @field_validator("jwt_secret_key")
     @classmethod
@@ -50,7 +55,19 @@ class Settings(BaseSettings):
         return v.strip()
 
     def cors_origins_list(self) -> list[str]:
-        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+        origins = [o.strip().rstrip("/") for o in self.cors_origins.split(",") if o.strip()]
+
+        if self.frontend_url.strip():
+            origins.append(self.frontend_url.strip().rstrip("/"))
+
+        unique_origins: list[str] = []
+        seen: set[str] = set()
+        for origin in origins:
+            if origin not in seen:
+                seen.add(origin)
+                unique_origins.append(origin)
+
+        return unique_origins
 
 
 @lru_cache

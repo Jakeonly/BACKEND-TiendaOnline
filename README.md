@@ -76,7 +76,7 @@ Resumen de lo que se implementó en este proyecto:
 - **Token usado en el cliente de consola**: en `main.py` se añadió opción de **Iniciar sesión** y **Cerrar sesión**. Tras login exitoso, el token se guarda y se envía automáticamente en peticiones posteriores.
 - **Rutas de usuarios protegidas**: listar, obtener, actualizar y eliminar usuario requieren JWT.
 - **Contraseñas hasheadas con bcrypt**: se reforzó validación para evitar error 500 cuando existe hash inválido en BD.
-- **CORS activo en FastAPI**: configurado en `src/app.py` con orígenes desde `CORS_ORIGINS`, credenciales habilitadas, métodos comunes y cabeceras `Authorization`, `Content-Type`, `Accept`.
+- **CORS activo en FastAPI**: configurado en `src/app.py` con orígenes desde `CORS_ORIGINS` y `FRONTEND_URL`, credenciales habilitadas, métodos comunes y cabeceras `Authorization`, `Content-Type`, `Accept`.
 
 ### 💳 Módulo de Pagos
 
@@ -116,6 +116,9 @@ Variables de entorno relevantes (archivo `.env`):
 - `JWT_ALGORITHM` (por defecto `HS256`)
 - `ACCESS_TOKEN_EXPIRE_MINUTES`
 - `CORS_ORIGINS`
+- `FRONTEND_URL`
 - `DATABASE_URL`
+
+Para Render, define `FRONTEND_URL` con la URL pública de tu frontend, por ejemplo `https://tu-frontend.onrender.com`. Si prefieres, también puedes dejar varios orígenes en `CORS_ORIGINS` separados por coma.
 
 Además, se agregó `.env.example` para subir al repositorio sin exponer secretos reales.
