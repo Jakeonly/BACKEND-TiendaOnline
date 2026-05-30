@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class OrdenBase(BaseModel):
@@ -34,5 +34,4 @@ class OrdenResponse(OrdenBase):
     fecha_creacion: datetime | None = None
     fecha_edicion: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

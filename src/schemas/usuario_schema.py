@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 
 
 class UsuarioBase(BaseModel):
@@ -40,5 +40,4 @@ class UsuarioResponse(UsuarioBase):
     fecha_creacion: datetime | None = None
     fecha_edicion: datetime | None = None
 
-    class Config:
-        from_attributes = True  # Permite mapear desde modelos de SQLAlchemy[cite: 1]
+    model_config = ConfigDict(from_attributes=True)  # Permite mapear desde modelos de SQLAlchemy[cite: 1]
