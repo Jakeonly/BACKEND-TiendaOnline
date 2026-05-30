@@ -6,6 +6,10 @@ Este proyecto es un sistema de gestión para una tienda en línea desarrollado c
 # Link para el repositorio del FRONTEND
 [FRONTEND](https://github.com/Jakeonly/FRONTEND-TiendaOnline)
 
+# Link del DEPLOY en RENDER
+
+[API URL EN RENDER](https://backend-tiendaonline-m1bg.onrender.com/)
+
 ## 🎬 Video de Presentación
 [Ver video explicativo del proyecto](https://drive.google.com/file/d/1KoEwO1R_xJXrAMhYYMtHhKgp7f3kle-y/view?usp=sharing)
 
